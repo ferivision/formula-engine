@@ -79,21 +79,32 @@ Follow this pipeline, in order — don't skip straight to coding:
 ## Git workflow
 
 - **`develop`** is the default branch. All active work happens here
-  or on short-lived feature branches — never commit directly to
+  or on short-lived ticket branches — never commit directly to
   `main`.
-- **Starting a new feature:** branch from `develop`, not `main`:
+- **One GitHub issue = one branch = one merge.** Don't use a single
+  long-lived branch per feature folder — each ticket gets its own
+  short-lived branch off `develop`, its own PR, and its own merge.
+  This keeps every reviewable diff scoped to one ticket's acceptance
+  criteria instead of piling up into one large review at the end of
+  a feature.
   ```
   git checkout develop
   git pull
-  git checkout -b feature/000N-<slug>
+  git checkout -b issue-<N>-<short-slug>
   ```
-  Ticket-by-ticket commits (per the working loop above) land on this
-  branch. Merge back into `develop` once all phases for that feature
-  are done and the full test suite passes — don't merge partial/
-  broken work into `develop`.
+  e.g. `issue-5-ast-node-types` for issue #5
+  (`[FASE-3.1] AST node types + literal/identifier/binary expression
+  parsing`).
+- **Per ticket:** implement, commit with a message referencing the
+  issue (e.g. `closes #5`), run the full test suite (`make test &&
+  make test-race`) — do not open a PR if anything fails. Push the
+  branch and open a PR against `develop` (`gh pr create`). Merging a
+  passing per-ticket PR into `develop` is routine ticket work, not a
+  release action (see the guardrail below) — it doesn't need a
+  separate confirmation each time. Delete the branch after merge.
 - **`main` is release-only.** It only ever receives merges from
   `develop` (a "cut a release" action), never direct commits and
-  never a merge straight from a feature branch.
+  never a merge straight from a ticket branch.
 - **On merge to `main` (releasing a version):**
     1. Run the full test suite, including the race detector:
        `make test && make test-race`. Do not proceed if anything fails.
@@ -170,9 +181,9 @@ Follow this pipeline, in order — don't skip straight to coding:
 
 ## Commits
 
-- One ticket ≈ one commit, on the feature branch for whatever's
-  currently in progress. Don't bundle multiple tickets into one
-  commit, and don't split one ticket across many commits that leave
+- One ticket ≈ one commit, on that ticket's own branch (see Git
+  workflow above). Don't bundle multiple tickets into one commit, and
+  don't split one ticket across many commits that leave
   intermediate commits in a broken/non-compiling state.
 - Commit message format: short summary line, then `closes #N` if it
   finishes a GitHub issue.
