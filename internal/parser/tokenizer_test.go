@@ -58,6 +58,16 @@ func TestTokenize_TokenTypes(t *testing.T) {
 			},
 		},
 		{
+			name:  "string literal",
+			input: `"hello world"`,
+			want:  []Token{{Type: TokenString, Value: "hello world"}},
+		},
+		{
+			name:  "string literal with escaped quote",
+			input: `"he said \"hi\""`,
+			want:  []Token{{Type: TokenString, Value: `he said "hi"`}},
+		},
+		{
 			name:  "nested function call expression",
 			input: "MAX(1, MIN(2, 3.5) * x)",
 			want: []Token{

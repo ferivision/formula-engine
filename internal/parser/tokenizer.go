@@ -1,8 +1,7 @@
 package parser
 
 // Tokenize turns formula text into a token stream, always terminated
-// by a single TokenEOF. String literals and unrecognized-character
-// errors are handled in a later ticket (FASE-2.2).
+// by a single TokenEOF.
 func Tokenize(input string) ([]Token, error) {
 	runes := []rune(input)
 	n := len(runes)
@@ -45,13 +44,35 @@ func Tokenize(input string) ([]Token, error) {
 			}
 			tokens = append(tokens, Token{Type: TokenIdent, Value: string(runes[start:i]), Line: startLine, Column: startCol})
 
+		case r == '"':
+			advance()
+			var value []rune
+			closed := false
+			for i < n {
+				c := runes[i]
+				if c == '"' {
+					advance()
+					closed = true
+					break
+				}
+				if c == '\\' && i+1 < n {
+					advance()
+					value = append(value, runes[i])
+					advance()
+					continue
+				}
+				value = append(value, c)
+				advance()
+			}
+			if !closed {
+				return nil, newSyntaxError("unterminated string literal", startLine, startCol)
+			}
+			tokens = append(tokens, Token{Type: TokenString, Value: string(value), Line: startLine, Column: startCol})
+
 		default:
 			tt, ok := singleCharTokens[r]
 			if !ok {
-				// Unrecognized character: silently skipped for now.
-				// FASE-2.2 replaces this with a proper SyntaxError.
-				advance()
-				continue
+				return nil, newSyntaxError("unrecognized character "+string(r), startLine, startCol)
 			}
 			advance()
 			tokens = append(tokens, Token{Type: tt, Value: string(r), Line: startLine, Column: startCol})

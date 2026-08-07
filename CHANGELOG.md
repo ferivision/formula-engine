@@ -15,3 +15,7 @@
 - Added `internal/parser` with `Tokenize`, covering numbers,
   identifiers, operators, and punctuation, with line/column tracking
   (closes #3).
+- Added string literal tokenizing (with escaped quotes) and
+  `SyntaxError`-backed reporting for unterminated strings and
+  unrecognized characters, satisfying FR-7 (closes #4). Phase 2
+  complete.
