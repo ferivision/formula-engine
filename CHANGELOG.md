@@ -39,3 +39,6 @@
 - Added `internal/registry` with the `Function` interface and a
   self-registering `Register`/`Lookup` registry per `rfc.md` §6
   (closes #8).
+- Added `internal/registry/math`: `MAX`, `MIN`, `SUM`, `AVG`, `ROUND`,
+  `FLOOR`, `CEIL`, `ABS`, each self-registering via `init()`, with
+  arg-count and numeric-type validation (closes #9). Phase 4 complete.
