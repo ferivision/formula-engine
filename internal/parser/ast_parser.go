@@ -79,6 +79,9 @@ func (p *astParser) parseFactor() (*Node, error) {
 		return &Node{Type: NodeString, Value: tok.Value}, nil
 	case TokenIdent:
 		p.advance()
+		if p.current().Type == TokenLParen {
+			return p.parseFunctionCall(tok.Value)
+		}
 		return &Node{Type: NodeIdentifier, Value: tok.Value}, nil
 	case TokenLParen:
 		p.advance()
@@ -94,4 +97,32 @@ func (p *astParser) parseFactor() (*Node, error) {
 	default:
 		return nil, newSyntaxError("unexpected token", tok.Line, tok.Column)
 	}
+}
+
+// parseFunctionCall parses the argument list of a call whose name and
+// opening '(' have already been consumed up to (not including) '('.
+func (p *astParser) parseFunctionCall(name string) (*Node, error) {
+	p.advance() // consume '('
+
+	var args []*Node
+	if p.current().Type != TokenRParen {
+		for {
+			arg, err := p.parseExpression()
+			if err != nil {
+				return nil, err
+			}
+			args = append(args, arg)
+			if p.current().Type != TokenComma {
+				break
+			}
+			p.advance() // consume ','
+		}
+	}
+
+	if p.current().Type != TokenRParen {
+		return nil, newSyntaxError("expected closing parenthesis in function call", p.current().Line, p.current().Column)
+	}
+	p.advance() // consume ')'
+
+	return &Node{Type: NodeFunctionCall, Value: name, Args: args}, nil
 }
