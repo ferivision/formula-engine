@@ -26,3 +26,6 @@
   precedence-climbing parser for literals, identifiers, arithmetic
   operators, and parenthesized expressions, satisfying FR-3 for the
   non-function-call case (closes #5).
+- Added function-call parsing (`NodeFunctionCall`), including
+  arbitrarily nested calls and 0/1/many argument lists, completing
+  FR-3 (closes #6).
