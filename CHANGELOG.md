@@ -19,3 +19,10 @@
   `SyntaxError`-backed reporting for unterminated strings and
   unrecognized characters, satisfying FR-7 (closes #4). Phase 2
   complete.
+
+### Phase 3 — AST Parser
+
+- Added `internal/parser` AST (`Node`, `NodeType`) and a
+  precedence-climbing parser for literals, identifiers, arithmetic
+  operators, and parenthesized expressions, satisfying FR-3 for the
+  non-function-call case (closes #5).
