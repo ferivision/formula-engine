@@ -29,3 +29,7 @@
 - Added function-call parsing (`NodeFunctionCall`), including
   arbitrarily nested calls and 0/1/many argument lists, completing
   FR-3 (closes #6).
+- Added regression tests locking in the parser's syntax-error paths
+  (unbalanced parens, trailing operators, trailing comma in a call,
+  empty input) with correct `ErrSyntax` code and position — covers
+  the PRD's "invalid formula" use case (closes #7). Phase 3 complete.
