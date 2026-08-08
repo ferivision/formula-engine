@@ -33,3 +33,9 @@
   (unbalanced parens, trailing operators, trailing comma in a call,
   empty input) with correct `ErrSyntax` code and position — covers
   the PRD's "invalid formula" use case (closes #7). Phase 3 complete.
+
+### Phase 4 — Function Registry & Math Functions
+
+- Added `internal/registry` with the `Function` interface and a
+  self-registering `Register`/`Lookup` registry per `rfc.md` §6
+  (closes #8).
