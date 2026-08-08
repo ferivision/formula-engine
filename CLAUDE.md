@@ -129,10 +129,11 @@ Follow this pipeline, in order — don't skip straight to coding:
 - **Guardrail:** merging into `main` and creating a version tag are
   release actions, not routine ticket work — confirm with the user
   before doing either, even if everything above passes cleanly.
-- **One-time setup (not a Claude Code task):** the repo's default
-  branch needs to be set to `develop` in GitHub's repo settings
-  (Settings → Branches → Default branch) — this is a GitHub
-  configuration, not something `git` commands alone change.
+- **GitHub's default branch is `develop`** (set via `gh repo edit
+  --default-branch develop`) — this is what makes `closes #N` in a
+  per-ticket PR auto-close the issue on merge, since GitHub only
+  honors that keyword when merging into the repository's default
+  branch.
 
 ## Code conventions
 
