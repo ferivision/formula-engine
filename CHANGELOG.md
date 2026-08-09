@@ -77,3 +77,8 @@
   formulas: references to other formulas in the batch become graph
   edges, plain data fields are resolved directly (not edges), and
   anything else is flagged as undefined, feeding FR-6 (closes #15).
+- Added `TopologicalSort` (iterative Kahn's algorithm) producing a
+  dependency-respecting evaluation order regardless of input order;
+  cycles are safely omitted from the result rather than panicking,
+  with formal rejection deferred to Phase 8 (closes #16). Phase 7
+  complete.
