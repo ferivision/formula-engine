@@ -1,6 +1,6 @@
 package formulaengine
 
-import "github.com/Ferivision/formula-engine/internal/apperror"
+import "github.com/ferivision/formula-engine/internal/apperror"
 
 // FormulaInput is one named formula to evaluate.
 type FormulaInput struct {

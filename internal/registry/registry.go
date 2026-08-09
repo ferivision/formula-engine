@@ -1,6 +1,6 @@
 package registry
 
-import "github.com/Ferivision/formula-engine/internal/apperror"
+import "github.com/ferivision/formula-engine/internal/apperror"
 
 var functions = make(map[string]Function)
 

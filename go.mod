@@ -1,3 +1,3 @@
-module github.com/Ferivision/formula-engine
+module github.com/ferivision/formula-engine
 
 go 1.25.12

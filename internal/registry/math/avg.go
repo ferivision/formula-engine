@@ -1,6 +1,6 @@
 package math
 
-import "github.com/Ferivision/formula-engine/internal/registry"
+import "github.com/ferivision/formula-engine/internal/registry"
 
 func init() {
 	registry.Register(avgFunction{})

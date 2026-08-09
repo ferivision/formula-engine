@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Ferivision/formula-engine/internal/apperror"
+	"github.com/ferivision/formula-engine/internal/apperror"
 )
 
 func parseErr(t *testing.T, input string) *apperror.FormulaError {

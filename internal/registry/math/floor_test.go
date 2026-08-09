@@ -3,7 +3,7 @@ package math
 import (
 	"testing"
 
-	"github.com/Ferivision/formula-engine/internal/registry"
+	"github.com/ferivision/formula-engine/internal/registry"
 )
 
 func TestFloor_Name(t *testing.T) {

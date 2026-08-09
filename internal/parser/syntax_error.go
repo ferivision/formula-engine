@@ -1,6 +1,6 @@
 package parser
 
-import "github.com/Ferivision/formula-engine/internal/apperror"
+import "github.com/ferivision/formula-engine/internal/apperror"
 
 func newSyntaxError(message string, line, column int) error {
 	return &apperror.FormulaError{

@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Ferivision/formula-engine/internal/apperror"
-	"github.com/Ferivision/formula-engine/internal/registry"
+	"github.com/ferivision/formula-engine/internal/apperror"
+	"github.com/ferivision/formula-engine/internal/registry"
 )
 
 func TestCheckArgCount_WithinRange(t *testing.T) {
