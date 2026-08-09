@@ -10,6 +10,11 @@ import (
 
 func mustEvaluate(t *testing.T, input string) any {
 	t.Helper()
+	return mustEvaluateWithData(t, input, nil)
+}
+
+func mustEvaluateWithData(t *testing.T, input string, data map[string]any) any {
+	t.Helper()
 	tokens, err := parser.Tokenize(input)
 	if err != nil {
 		t.Fatalf("Tokenize(%q) error = %v", input, err)
@@ -18,7 +23,7 @@ func mustEvaluate(t *testing.T, input string) any {
 	if err != nil {
 		t.Fatalf("Parse(%q) error = %v", input, err)
 	}
-	got, err := Evaluate(node)
+	got, err := Evaluate(node, NewContext(data))
 	if err != nil {
 		t.Fatalf("Evaluate(%q) error = %v", input, err)
 	}
@@ -64,7 +69,7 @@ func TestEvaluate_DivisionByZero(t *testing.T) {
 	tokens, _ := parser.Tokenize("1 / 0")
 	node, _ := parser.Parse(tokens)
 
-	_, err := Evaluate(node)
+	_, err := Evaluate(node, NewContext(nil))
 	if err == nil {
 		t.Fatal("Evaluate() error = nil, want division-by-zero error")
 	}

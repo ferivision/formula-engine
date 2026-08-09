@@ -40,7 +40,7 @@ func TestEvaluate_UnknownFunction(t *testing.T) {
 		t.Fatalf("Parse() error = %v", err)
 	}
 
-	_, err = Evaluate(node)
+	_, err = Evaluate(node, NewContext(nil))
 	if err == nil {
 		t.Fatal("Evaluate() error = nil, want error for unknown function")
 	}
