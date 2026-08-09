@@ -73,3 +73,7 @@
   explicit-stack (non-recursive) AST walk collecting referenced
   field/formula names, including from nested function-call arguments
   (closes #14).
+- Added `BuildGraph`, building a dependency graph across a batch of
+  formulas: references to other formulas in the batch become graph
+  edges, plain data fields are resolved directly (not edges), and
+  anything else is flagged as undefined, feeding FR-6 (closes #15).
