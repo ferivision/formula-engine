@@ -66,3 +66,10 @@
   (and the resulting divide-by-zero error for `/` by null), null-as-
   empty-string in text context, and `ErrTypeMismatch` for anything
   else (closes #13). Phase 6 complete.
+
+### Phase 7 — Dependency Graph & Iterative Topological Sort
+
+- Added `internal/dependency` with `ExtractReferences`, an
+  explicit-stack (non-recursive) AST walk collecting referenced
+  field/formula names, including from nested function-call arguments
+  (closes #14).
