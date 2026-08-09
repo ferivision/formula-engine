@@ -189,6 +189,14 @@ Follow this pipeline, in order — don't skip straight to coding:
 - Commit message format: short summary line, then `closes #N` if it
   finishes a GitHub issue.
 - Update `CHANGELOG.md` in the same commit as the work it describes.
+- When a ticket adds or changes user-visible functionality (a new
+  built-in function, new supported syntax, a new error case a caller
+  can observe, etc.), also update `README.md`'s supported/not-yet-
+  supported lists in that same commit. `CHANGELOG.md` is a history of
+  what changed; `README.md` must stay an accurate snapshot of what
+  the library can do *right now* — don't let it drift stale as phases
+  complete. Routine internal-only tickets (no observable behavior
+  change) don't need a README update.
 
 ## What NOT to do
 
