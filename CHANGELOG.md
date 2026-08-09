@@ -82,3 +82,9 @@
   cycles are safely omitted from the result rather than panicking,
   with formal rejection deferred to Phase 8 (closes #16). Phase 7
   complete.
+
+### Phase 8 — Cycle Detection
+
+- Added `HasCycle`, an iterative (three-color, explicit-stack) cycle
+  detector, correct on direct and indirect cycles at 1000+ nodes
+  without recursion-depth concerns, per PRD use case 5 (closes #17).
