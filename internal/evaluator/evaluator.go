@@ -43,11 +43,23 @@ func evalBinary(node *parser.Node, ctx *Context) (registry.Value, error) {
 	if err != nil {
 		return nil, err
 	}
-	left, err := toFloat64(leftVal)
+
+	// string + string concatenates (rfc.md §10); every other operand
+	// combination -- including number + string -- goes through
+	// numeric coercion below.
+	if node.Operator == parser.TokenPlus {
+		if leftStr, ok := leftVal.(string); ok {
+			if rightStr, ok := rightVal.(string); ok {
+				return leftStr + rightStr, nil
+			}
+		}
+	}
+
+	left, err := coerceForArithmetic(leftVal)
 	if err != nil {
 		return nil, err
 	}
-	right, err := toFloat64(rightVal)
+	right, err := coerceForArithmetic(rightVal)
 	if err != nil {
 		return nil, err
 	}
@@ -85,12 +97,4 @@ func evalFunctionCall(node *parser.Node, ctx *Context) (registry.Value, error) {
 	}
 
 	return fn.Evaluate(args)
-}
-
-func toFloat64(v registry.Value) (float64, error) {
-	f, ok := v.(float64)
-	if !ok {
-		return 0, newTypeError("expected a number")
-	}
-	return f, nil
 }

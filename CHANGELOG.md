@@ -60,3 +60,9 @@
   absent from the data map surfaces a clear `ErrUndefinedReference`
   per FR-6, distinct from a field present with a `nil` value (closes
   #12).
+- Added `internal/evaluator/type_coercion.go` implementing every row
+  of `rfc.md` §10: string+string concatenation via `+`, number+string
+  numeric parsing, bool-as-1/0 in arithmetic, null-as-0 in `+`/`-`
+  (and the resulting divide-by-zero error for `/` by null), null-as-
+  empty-string in text context, and `ErrTypeMismatch` for anything
+  else (closes #13). Phase 6 complete.
