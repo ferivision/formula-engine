@@ -157,6 +157,22 @@ table) instead of behaving inconsistently per function:
 `MAX`/`MIN`/`SUM`/`AVG` take one or more arguments; `ROUND` takes an
 optional second argument for decimal places (defaults to `0`).
 
+### Built-in functions — logic
+
+There's no boolean literal syntax yet, so examples below pass the
+condition in via a data field rather than a literal `true`/`false` in
+the expression itself.
+
+| Function | Expression | Data | Result |
+|---|---|---|---|
+| `AND` | `AND(a, b)` | `{"a": true, "b": true}` | `true` |
+| `OR` | `OR(a, b)` | `{"a": false, "b": true}` | `true` |
+| `NOT` | `NOT(a)` | `{"a": true}` | `false` |
+
+`AND`/`OR` take one or more arguments. All arguments must be actual
+booleans — there's no numeric-truthiness coercion (`AND(1, 0)` is a
+`TypeError`, not `false`), since `rfc.md` §10 doesn't define one.
+
 ### Error handling
 
 | Situation | Where it shows up |
@@ -172,8 +188,8 @@ formula's `Result.Err`.
 
 ## Not yet supported
 
-- Logic (`IF`, `AND`, `OR`, `NOT`), text, date, and comparison
-  functions — the built-in function set is actively growing. See
+- `IF`, plus text, date, and comparison functions — the built-in
+  function set is actively growing. See
   [`rfc.md` §15](docs/features/0001-core-engine/rfc.md) for the
   implementation roadmap, or the repo's open issues for what's in
   progress right now.
