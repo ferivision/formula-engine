@@ -42,3 +42,9 @@
 - Added `internal/registry/math`: `MAX`, `MIN`, `SUM`, `AVG`, `ROUND`,
   `FLOOR`, `CEIL`, `ABS`, each self-registering via `init()`, with
   arg-count and numeric-type validation (closes #9). Phase 4 complete.
+
+### Phase 5 — Evaluator Core
+
+- Added `internal/evaluator` with `Evaluate`, walking literal and
+  arithmetic (`+ - * /`) AST nodes, with division-by-zero surfaced as
+  a formula-level `ErrRuntime` per `rfc.md` §7 (closes #10).
