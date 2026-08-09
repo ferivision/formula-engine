@@ -88,3 +88,10 @@
 - Added `HasCycle`, an iterative (three-color, explicit-stack) cycle
   detector, correct on direct and indirect cycles at 1000+ nodes
   without recursion-depth concerns, per PRD use case 5 (closes #17).
+- `Evaluate` now runs the real pipeline end-to-end: parse every
+  formula, build the dependency graph, reject circular references and
+  undefined references as call-level errors with no partial results
+  (rfc.md §7), then topologically sort and evaluate in order, feeding
+  each formula's result to later formulas as data. Covers PRD use
+  cases 1, 3, 5, and 6 through the public API (closes #18). Phase 8
+  complete.
