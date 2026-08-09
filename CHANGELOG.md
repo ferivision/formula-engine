@@ -103,3 +103,9 @@
   number/string/null into a boolean, so anything else hits the
   table's existing `ErrTypeMismatch` catch-all rather than inventing
   a new rule (closes #19).
+- Added `IF` with true short-circuit evaluation: the evaluator now
+  special-cases it at the AST level (only the taken branch is
+  evaluated), since `registry.Function`'s `Evaluate(args []Value)`
+  signature can't support lazy branches. `IF(cond, 1, 1/0)` returns
+  `1` without error when `cond` is `true`. Completes Phase 9 (closes
+  #20).

@@ -82,6 +82,13 @@ func evalBinary(node *parser.Node, ctx *Context) (registry.Value, error) {
 }
 
 func evalFunctionCall(node *parser.Node, ctx *Context) (registry.Value, error) {
+	// IF requires short-circuit evaluation (only the taken branch
+	// runs) and so can't go through the generic eager-evaluate-all-
+	// args path below -- see internal/registry/logic.ifFunction.
+	if node.Value == "IF" {
+		return evalIf(node, ctx)
+	}
+
 	fn, err := registry.Lookup(node.Value)
 	if err != nil {
 		return nil, err
@@ -97,4 +104,27 @@ func evalFunctionCall(node *parser.Node, ctx *Context) (registry.Value, error) {
 	}
 
 	return fn.Evaluate(args)
+}
+
+func evalIf(node *parser.Node, ctx *Context) (registry.Value, error) {
+	fn, err := registry.Lookup("IF")
+	if err != nil {
+		return nil, err
+	}
+	if len(node.Args) < fn.MinArgs() || len(node.Args) > fn.MaxArgs() {
+		return nil, newRuntimeError("IF: wrong number of arguments (got " + strconv.Itoa(len(node.Args)) + ", want 3)")
+	}
+
+	condVal, err := Evaluate(node.Args[0], ctx)
+	if err != nil {
+		return nil, err
+	}
+	cond, err := coerceForBool(condVal)
+	if err != nil {
+		return nil, err
+	}
+	if cond {
+		return Evaluate(node.Args[1], ctx)
+	}
+	return Evaluate(node.Args[2], ctx)
 }
