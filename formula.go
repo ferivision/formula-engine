@@ -6,7 +6,8 @@ import (
 	"github.com/ferivision/formula-engine/internal/evaluator"
 	"github.com/ferivision/formula-engine/internal/parser"
 
-	_ "github.com/ferivision/formula-engine/internal/registry/math" // registers MAX, MIN, SUM, AVG, ROUND, FLOOR, CEIL, ABS
+	_ "github.com/ferivision/formula-engine/internal/registry/logic" // registers AND, OR, NOT
+	_ "github.com/ferivision/formula-engine/internal/registry/math"  // registers MAX, MIN, SUM, AVG, ROUND, FLOOR, CEIL, ABS
 )
 
 // FormulaInput is one named formula to evaluate.

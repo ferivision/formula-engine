@@ -95,3 +95,11 @@
   each formula's result to later formulas as data. Covers PRD use
   cases 1, 3, 5, and 6 through the public API (closes #18). Phase 8
   complete.
+
+### Phase 9 — Logic Functions
+
+- Added `internal/registry/logic`: `AND`, `OR`, `NOT`. Only real
+  booleans are accepted -- rfc.md §10 has no defined coercion from
+  number/string/null into a boolean, so anything else hits the
+  table's existing `ErrTypeMismatch` catch-all rather than inventing
+  a new rule (closes #19).
