@@ -25,7 +25,7 @@ func Evaluate(node *parser.Node) (registry.Value, error) {
 	case parser.NodeIdentifier:
 		return nil, newRuntimeError("field references are not yet supported")
 	case parser.NodeFunctionCall:
-		return nil, newRuntimeError("function calls are not yet supported")
+		return evalFunctionCall(node)
 	default:
 		return nil, newRuntimeError("unknown node type")
 	}
@@ -64,6 +64,24 @@ func evalBinary(node *parser.Node) (registry.Value, error) {
 	default:
 		return nil, newRuntimeError("unknown operator")
 	}
+}
+
+func evalFunctionCall(node *parser.Node) (registry.Value, error) {
+	fn, err := registry.Lookup(node.Value)
+	if err != nil {
+		return nil, err
+	}
+
+	args := make([]registry.Value, len(node.Args))
+	for i, argNode := range node.Args {
+		v, err := Evaluate(argNode)
+		if err != nil {
+			return nil, err
+		}
+		args[i] = v
+	}
+
+	return fn.Evaluate(args)
 }
 
 func toFloat64(v registry.Value) (float64, error) {

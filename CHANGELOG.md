@@ -48,3 +48,7 @@
 - Added `internal/evaluator` with `Evaluate`, walking literal and
   arithmetic (`+ - * /`) AST nodes, with division-by-zero surfaced as
   a formula-level `ErrRuntime` per `rfc.md` §7 (closes #10).
+- Wired function-call nodes into the evaluator via the registry
+  (`registry.Lookup` + `Function.Evaluate`), supporting arbitrary
+  nesting and clear errors for unknown functions (closes #11). Phase
+  5 complete.
