@@ -8,9 +8,8 @@ import (
 )
 
 // Evaluate walks an AST produced by parser.Parse and computes its
-// value. Field references and function calls are handled in later
-// tickets (FASE-5.2, Phase 6).
-func Evaluate(node *parser.Node) (registry.Value, error) {
+// value, resolving identifier nodes against ctx.
+func Evaluate(node *parser.Node, ctx *Context) (registry.Value, error) {
 	switch node.Type {
 	case parser.NodeNumber:
 		v, err := strconv.ParseFloat(node.Value, 64)
@@ -21,22 +20,26 @@ func Evaluate(node *parser.Node) (registry.Value, error) {
 	case parser.NodeString:
 		return node.Value, nil
 	case parser.NodeBinary:
-		return evalBinary(node)
+		return evalBinary(node, ctx)
 	case parser.NodeIdentifier:
-		return nil, newRuntimeError("field references are not yet supported")
+		v, ok := ctx.Lookup(node.Value)
+		if !ok {
+			return nil, newUndefinedReferenceError(node.Value)
+		}
+		return v, nil
 	case parser.NodeFunctionCall:
-		return evalFunctionCall(node)
+		return evalFunctionCall(node, ctx)
 	default:
 		return nil, newRuntimeError("unknown node type")
 	}
 }
 
-func evalBinary(node *parser.Node) (registry.Value, error) {
-	leftVal, err := Evaluate(node.Left)
+func evalBinary(node *parser.Node, ctx *Context) (registry.Value, error) {
+	leftVal, err := Evaluate(node.Left, ctx)
 	if err != nil {
 		return nil, err
 	}
-	rightVal, err := Evaluate(node.Right)
+	rightVal, err := Evaluate(node.Right, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +69,7 @@ func evalBinary(node *parser.Node) (registry.Value, error) {
 	}
 }
 
-func evalFunctionCall(node *parser.Node) (registry.Value, error) {
+func evalFunctionCall(node *parser.Node, ctx *Context) (registry.Value, error) {
 	fn, err := registry.Lookup(node.Value)
 	if err != nil {
 		return nil, err
@@ -74,7 +77,7 @@ func evalFunctionCall(node *parser.Node) (registry.Value, error) {
 
 	args := make([]registry.Value, len(node.Args))
 	for i, argNode := range node.Args {
-		v, err := Evaluate(argNode)
+		v, err := Evaluate(argNode, ctx)
 		if err != nil {
 			return nil, err
 		}

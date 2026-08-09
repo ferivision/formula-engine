@@ -52,3 +52,11 @@
   (`registry.Lookup` + `Function.Evaluate`), supporting arbitrary
   nesting and clear errors for unknown functions (closes #11). Phase
   5 complete.
+
+### Phase 6 — Field References & Evaluation Context
+
+- Added `internal/evaluator.Context` and wired identifier nodes
+  through it; `Evaluate` now takes a `*Context` parameter. A field
+  absent from the data map surfaces a clear `ErrUndefinedReference`
+  per FR-6, distinct from a field present with a `nil` value (closes
+  #12).
