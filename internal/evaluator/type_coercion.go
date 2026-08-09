@@ -32,6 +32,20 @@ func coerceForArithmetic(v registry.Value) (float64, error) {
 	}
 }
 
+// coerceForBool requires a real bool for use as an IF condition.
+// rfc.md §10 has no defined coercion from number/string/null into a
+// boolean, so anything else is a formula-level TypeError -- same rule
+// as internal/registry/logic's AND/OR/NOT, kept consistent here since
+// IF's condition is evaluated by internal/evaluator directly rather
+// than through the registry.
+func coerceForBool(v registry.Value) (bool, error) {
+	b, ok := v.(bool)
+	if !ok {
+		return false, newTypeError("expected a boolean")
+	}
+	return b, nil
+}
+
 // coerceForText applies rfc.md §10's text-context rule: a missing
 // (nil) value becomes an empty string. Non-string, non-nil values
 // have no defined text-context rule yet (see rfc.md §10) and are a

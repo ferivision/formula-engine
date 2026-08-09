@@ -173,6 +173,11 @@ the expression itself.
 booleans — there's no numeric-truthiness coercion (`AND(1, 0)` is a
 `TypeError`, not `false`), since `rfc.md` §10 doesn't define one.
 
+`IF(condition, ifTrue, ifFalse)` is short-circuiting: only the branch
+that's actually taken gets evaluated. `IF(cond, 1, 1/0)` returns `1`
+without error when `cond` is `true` — the `1/0` branch never runs.
+The condition follows the same real-boolean-only rule as `AND`/`OR`.
+
 ### Error handling
 
 | Situation | Where it shows up |
@@ -188,8 +193,8 @@ formula's `Result.Err`.
 
 ## Not yet supported
 
-- `IF`, plus text, date, and comparison functions — the built-in
-  function set is actively growing. See
+- Text, date, and comparison functions — the built-in function set is
+  actively growing. See
   [`rfc.md` §15](docs/features/0001-core-engine/rfc.md) for the
   implementation roadmap, or the repo's open issues for what's in
   progress right now.
