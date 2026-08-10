@@ -134,3 +134,12 @@
   28 -> Mar 1 in 2024 is 2 days) and a real DST transition (Mar 8 ->
   Mar 9, 2025 in America/New_York is exactly 1 day despite only 23
   real hours elapsing). Completes Phase 11 (closes #23).
+
+### Phase 12 — Comparison Functions
+
+- Added `internal/registry/comparison`: `EQUALS`, `BETWEEN`. Mixed
+  number/numeric-string comparisons resolve via the same coercion
+  rules as arithmetic (`rfc.md` §10); a non-numeric string compared
+  against a number is a formula-level `ErrTypeMismatch`. `BETWEEN` is
+  inclusive of both bounds. Completes Phase 12 -- all planned Phase
+  1-12 built-in functions are now implemented (closes #24).
