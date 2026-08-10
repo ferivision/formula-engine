@@ -8,6 +8,7 @@ import (
 
 	_ "github.com/ferivision/formula-engine/internal/registry/logic" // registers AND, OR, NOT
 	_ "github.com/ferivision/formula-engine/internal/registry/math"  // registers MAX, MIN, SUM, AVG, ROUND, FLOOR, CEIL, ABS
+	_ "github.com/ferivision/formula-engine/internal/registry/text"  // registers CONCAT, UPPER, LOWER, TRIM, LENGTH
 )
 
 // FormulaInput is one named formula to evaluate.

@@ -109,3 +109,12 @@
   signature can't support lazy branches. `IF(cond, 1, 1/0)` returns
   `1` without error when `cond` is `true`. Completes Phase 9 (closes
   #20).
+
+### Phase 10 — Text Functions
+
+- Added `internal/registry/text`: `CONCAT`, `UPPER`, `LOWER`, `TRIM`,
+  `LENGTH`. Arguments must be a string or `nil` (treated as `""` per
+  `rfc.md` §10); anything else is a formula-level `ErrTypeMismatch`,
+  since the table defines no text-context coercion for
+  numbers/bools. `LENGTH` counts Unicode runes, not bytes (closes
+  #21).
