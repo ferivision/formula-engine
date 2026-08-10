@@ -161,3 +161,12 @@
   canonical rule. Text (`CONCAT UPPER LOWER TRIM LENGTH`) and logic
   (`AND OR NOT`) were already correct -- confirmed with audit tests
   rather than changed. Completes Phase 13 (closes #26).
+
+### Phase 14 — Error Model Refinement
+
+- Confirmed (no production change needed): a formula-level runtime
+  error doesn't block an independent sibling in the same `Evaluate`
+  call, per `rfc.md` §7 -- already correct by construction, since
+  each formula's result is independent and only a successful result
+  feeds later formulas. Locked in with a test and a README example
+  (closes #27).
