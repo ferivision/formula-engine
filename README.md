@@ -205,6 +205,7 @@ build them with `NOW`.
 | `NOW` | `NOW()` | — | current time as `time.Time` |
 | `DATE_ADD` | `DATE_ADD(start, 10, "days")` | `{"start": time.Date(2024,1,1,...)}` | `2024-01-11` |
 | `DATE_ADD` | `DATE_ADD(start, 2, "months")` | `{"start": time.Date(2024,1,1,...)}` | `2024-03-01` |
+| `DATE_DIFF` | `DATE_DIFF(d1, d2)` | `{"d1": time.Date(2024,1,1,...), "d2": time.Date(2024,1,11,...)}` | `10` |
 
 `DATE_ADD(date, amount, unit)` supports `"days"`, `"months"`, and
 `"years"` (a negative `amount` subtracts). Month/year arithmetic uses
@@ -212,6 +213,12 @@ Go's `time.Time.AddDate`, which rolls a day that doesn't exist in the
 target month into the following month (e.g. Jan 31 + 1 month lands in
 early March) rather than clamping to the month's last day — that's
 Go's documented behavior, not a bug in this library.
+
+`DATE_DIFF(date1, date2)` returns the whole number of calendar days
+from `date1` to `date2` (negative if `date2` is earlier), computed
+from each date's own year/month/day rather than raw duration — so
+it's correct across both a leap year and a DST transition, where a
+"day" can otherwise be 23 or 25 real hours.
 
 ### Error handling
 
@@ -228,8 +235,8 @@ formula's `Result.Err`.
 
 ## Not yet supported
 
-- Comparison functions, and `DATE_DIFF` — the built-in function set
-  is actively growing. See
+- Comparison functions — the built-in function set is actively
+  growing. See
   [`rfc.md` §15](docs/features/0001-core-engine/rfc.md) for the
   implementation roadmap, or the repo's open issues for what's in
   progress right now.
