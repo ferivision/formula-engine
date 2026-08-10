@@ -27,11 +27,16 @@ func checkArgCount(name string, minArgs, maxArgs int, args []registry.Value) err
 // pass through, bools become 1/0, nil becomes 0, and numeric strings
 // are parsed. Used for numeric-context comparisons (BETWEEN, and
 // EQUALS whenever its operands aren't both the same non-numeric
-// type).
+// type). int is additionally accepted as a defensive alternate
+// representation of "a number" (not itself a §10 row), kept
+// consistent with the same allowance in internal/evaluator and
+// internal/registry/math (FASE-13.1).
 func toFloat64(v registry.Value) (float64, error) {
 	switch n := v.(type) {
 	case float64:
 		return n, nil
+	case int:
+		return float64(n), nil
 	case bool:
 		if n {
 			return 1, nil

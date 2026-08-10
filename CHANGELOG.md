@@ -143,3 +143,15 @@
   against a number is a formula-level `ErrTypeMismatch`. `BETWEEN` is
   inclusive of both bounds. Completes Phase 12 -- all planned Phase
   1-12 built-in functions are now implemented (closes #24).
+
+### Phase 13 — Type Coercion Hardening
+
+- Fixed a real gap the audit found: math functions (`MAX MIN SUM AVG
+  ROUND FLOOR CEIL ABS`) only coerced `float64`/`int`, silently
+  disagreeing with arithmetic operators on `bool`, `nil`, and numeric
+  strings (`MAX(true, 0)` errored while `true + 0` didn't). Comparison
+  functions were missing the `int` case in the other direction. Fixed
+  both to the one canonical coercion rule already correct in
+  `internal/evaluator`, which now also accepts `int` for consistency.
+  README's math section already (accidentally) claimed this coercion
+  worked -- it does now (closes #25).

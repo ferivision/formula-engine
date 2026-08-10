@@ -99,6 +99,17 @@ func TestCoercion_NullInTextContext_TreatedAsEmptyString(t *testing.T) {
 	}
 }
 
+// Not itself a §10 table row -- a defensive alternate representation
+// of "a number" for callers whose data map holds a plain Go int
+// rather than float64, kept consistent with internal/registry/math's
+// same allowance (FASE-13.1).
+func TestCoercion_IntTreatedAsNumber(t *testing.T) {
+	got := mustEvaluateWithData(t, "x + 1", map[string]any{"x": 5})
+	if got != 6.0 {
+		t.Errorf("Evaluate() = %v, want 6", got)
+	}
+}
+
 func TestCoercion_MismatchedTypeWithNoDefinedRule(t *testing.T) {
 	_, err := coerceForArithmetic([]int{1, 2})
 	var fe *apperror.FormulaError
