@@ -155,3 +155,9 @@
   `internal/evaluator`, which now also accepts `int` for consistency.
   README's math section already (accidentally) claimed this coercion
   worked -- it does now (closes #25).
+- Audited text, logic, and date functions the same way. Found and
+  fixed the same gap in `DATE_ADD`'s `amount` argument (only
+  `float64` was accepted, not even `int`); fixed to the same
+  canonical rule. Text (`CONCAT UPPER LOWER TRIM LENGTH`) and logic
+  (`AND OR NOT`) were already correct -- confirmed with audit tests
+  rather than changed. Completes Phase 13 (closes #26).
