@@ -178,6 +178,22 @@ that's actually taken gets evaluated. `IF(cond, 1, 1/0)` returns `1`
 without error when `cond` is `true` — the `1/0` branch never runs.
 The condition follows the same real-boolean-only rule as `AND`/`OR`.
 
+### Built-in functions — text
+
+| Function | Expression | Result |
+|---|---|---|
+| `CONCAT` | `CONCAT("foo", "bar")` | `"foobar"` |
+| `UPPER` | `UPPER("hello")` | `"HELLO"` |
+| `LOWER` | `LOWER("HELLO")` | `"hello"` |
+| `TRIM` | `TRIM("  hello  ")` | `"hello"` |
+| `LENGTH` | `LENGTH("hello")` | `5` |
+
+`CONCAT` takes one or more arguments. All of them (and `UPPER`/
+`LOWER`/`TRIM`/`LENGTH`'s single argument) must be a string or `nil`
+(treated as `""`, per `rfc.md` §10) — a number or bool is a
+`TypeError`, since the table doesn't define text-context coercion for
+those. `LENGTH` counts Unicode runes, not bytes.
+
 ### Error handling
 
 | Situation | Where it shows up |
@@ -193,7 +209,7 @@ formula's `Result.Err`.
 
 ## Not yet supported
 
-- Text, date, and comparison functions — the built-in function set is
+- Date and comparison functions — the built-in function set is
   actively growing. See
   [`rfc.md` §15](docs/features/0001-core-engine/rfc.md) for the
   implementation roadmap, or the repo's open issues for what's in
