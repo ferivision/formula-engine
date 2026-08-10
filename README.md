@@ -327,11 +327,14 @@ formulaengine.FormulaInput{Expression: "NOW()"}
 
 `DATE_ADD(date, amount, unit)` adds `amount` of `unit` (`"days"`,
 `"months"`, or `"years"`; a negative `amount` subtracts) to `date`.
-Month/year arithmetic uses Go's `time.Time.AddDate`, which rolls a
-day that doesn't exist in the target month into the following month
-(e.g. Jan 31 + 1 month lands in early March) rather than clamping to
-the month's last day — that's Go's documented behavior, not a bug in
-this library.
+`amount` follows the same numeric coercion as arithmetic (`rfc.md`
+§10) — a bool, `nil`, or numeric string all work, e.g.
+`DATE_ADD(start, "3", "days")` is the same as passing `3`. Month/year
+arithmetic uses Go's `time.Time.AddDate`, which rolls a day that
+doesn't exist in the target month into the following month (e.g.
+Jan 31 + 1 month lands in early March) rather than clamping to the
+month's last day — that's Go's documented behavior, not a bug in this
+library.
 
 ```go
 formulaengine.FormulaInput{Expression: `DATE_ADD(start, 10, "days")`}
