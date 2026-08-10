@@ -128,3 +128,9 @@
   unit)` supports `"days"`/`"months"`/`"years"` via `time.AddDate`,
   including its documented month/year-rollover behavior (closes
   #22).
+- Added `DATE_DIFF`, returning whole calendar days between two dates.
+  Computed from each date's own year/month/day (normalized into UTC)
+  rather than raw duration, so it's correct across a leap year (Feb
+  28 -> Mar 1 in 2024 is 2 days) and a real DST transition (Mar 8 ->
+  Mar 9, 2025 in America/New_York is exactly 1 day despite only 23
+  real hours elapsing). Completes Phase 11 (closes #23).
