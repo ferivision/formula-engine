@@ -9,11 +9,17 @@ import (
 // coerceForArithmetic converts v into a float64 for use in +, -, *, /,
 // per rfc.md §10: numbers pass through, bools become 1/0, a missing
 // (nil) value becomes 0, numeric strings are parsed, and anything
-// else is a formula-level TypeError.
+// else is a formula-level TypeError. int is additionally accepted as
+// a defensive alternate representation of "a number" for callers
+// whose data map holds a plain Go int rather than float64 -- not
+// itself a §10 row, but kept consistent with the same allowance in
+// internal/registry/math and comparison (FASE-13.1).
 func coerceForArithmetic(v registry.Value) (float64, error) {
 	switch n := v.(type) {
 	case float64:
 		return n, nil
+	case int:
+		return float64(n), nil
 	case bool:
 		if n {
 			return 1, nil
