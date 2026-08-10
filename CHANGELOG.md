@@ -118,3 +118,13 @@
   since the table defines no text-context coercion for
   numbers/bools. `LENGTH` counts Unicode runes, not bytes (closes
   #21).
+
+### Phase 11 — Date Functions
+
+- Added `internal/registry/date`: `NOW`, `DATE_ADD`. Dates are
+  represented as `time.Time` values. `NOW` reads through an
+  injectable `Now` var (a seam for deterministic tests, per NFR-2)
+  instead of calling `time.Now` directly. `DATE_ADD(date, amount,
+  unit)` supports `"days"`/`"months"`/`"years"` via `time.AddDate`,
+  including its documented month/year-rollover behavior (closes
+  #22).
