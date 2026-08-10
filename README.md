@@ -143,56 +143,169 @@ table) instead of behaving inconsistently per function:
 
 ### Built-in functions — math
 
-| Function | Expression | Result |
-|---|---|---|
-| `MAX` | `MAX(1, 5, 3)` | `5` |
-| `MIN` | `MIN(1, 5, 3)` | `1` |
-| `SUM` | `SUM(1, 2, 3.5)` | `6.5` |
-| `AVG` | `AVG(2, 4, 6)` | `4` |
-| `ROUND` | `ROUND(3.14159, 2)` | `3.14` |
-| `FLOOR` | `FLOOR(3.7)` | `3` |
-| `CEIL` | `CEIL(3.2)` | `4` |
-| `ABS` | `ABS(0 - 5)` | `5` |
+Every argument must be a number (a numeric string or a `bool` also
+coerces, per `rfc.md` §10) — anything else is a `TypeError`.
 
-`MAX`/`MIN`/`SUM`/`AVG` take one or more arguments; `ROUND` takes an
-optional second argument for decimal places (defaults to `0`).
+#### MAX / MIN
+
+Largest / smallest of one or more arguments.
+
+```go
+formulaengine.FormulaInput{Expression: "MAX(1, 5, 3)"}
+// data: none needed
+// result: 5
+
+formulaengine.FormulaInput{Expression: "MIN(1, 5, 3)"}
+// data: none needed
+// result: 1
+```
+
+#### SUM / AVG
+
+Sum / average of one or more arguments.
+
+```go
+formulaengine.FormulaInput{Expression: "SUM(1, 2, 3.5)"}
+// data: none needed
+// result: 6.5
+
+formulaengine.FormulaInput{Expression: "AVG(2, 4, 6)"}
+// data: none needed
+// result: 4
+```
+
+#### ROUND
+
+Rounds to the given number of decimal places (defaults to `0` if the
+second argument is omitted).
+
+```go
+formulaengine.FormulaInput{Expression: "ROUND(3.14159, 2)"}
+// data: none needed
+// result: 3.14
+```
+
+#### FLOOR / CEIL
+
+Rounds down / up to the nearest integer.
+
+```go
+formulaengine.FormulaInput{Expression: "FLOOR(3.7)"}
+// data: none needed
+// result: 3
+
+formulaengine.FormulaInput{Expression: "CEIL(3.2)"}
+// data: none needed
+// result: 4
+```
+
+#### ABS
+
+Absolute value. (There's no unary minus yet — see "not yet
+supported" — so a negative input has to come from subtraction, not a
+`-5` literal.)
+
+```go
+formulaengine.FormulaInput{Expression: "ABS(0 - 5)"}
+// data: none needed
+// result: 5
+```
 
 ### Built-in functions — logic
 
-There's no boolean literal syntax yet, so examples below pass the
-condition in via a data field rather than a literal `true`/`false` in
-the expression itself.
-
-| Function | Expression | Data | Result |
-|---|---|---|---|
-| `AND` | `AND(a, b)` | `{"a": true, "b": true}` | `true` |
-| `OR` | `OR(a, b)` | `{"a": false, "b": true}` | `true` |
-| `NOT` | `NOT(a)` | `{"a": true}` | `false` |
-
-`AND`/`OR` take one or more arguments. All arguments must be actual
+There's no boolean literal syntax yet, so every example below passes
+the condition in via a data field rather than a literal `true`/
+`false` in the expression itself. All arguments must be actual
 booleans — there's no numeric-truthiness coercion (`AND(1, 0)` is a
 `TypeError`, not `false`), since `rfc.md` §10 doesn't define one.
 
+#### AND / OR
+
+`AND` is `true` only if every argument is `true`; `OR` is `true` if
+any argument is. Both take one or more arguments.
+
+```go
+formulaengine.FormulaInput{Expression: "AND(a, b)"}
+// data: map[string]any{"a": true, "b": true}
+// result: true
+
+formulaengine.FormulaInput{Expression: "OR(a, b)"}
+// data: map[string]any{"a": false, "b": true}
+// result: true
+```
+
+#### NOT
+
+Negates a single boolean.
+
+```go
+formulaengine.FormulaInput{Expression: "NOT(a)"}
+// data: map[string]any{"a": true}
+// result: false
+```
+
+#### IF
+
 `IF(condition, ifTrue, ifFalse)` is short-circuiting: only the branch
-that's actually taken gets evaluated. `IF(cond, 1, 1/0)` returns `1`
-without error when `cond` is `true` — the `1/0` branch never runs.
-The condition follows the same real-boolean-only rule as `AND`/`OR`.
+that's actually taken gets evaluated, so a runtime error in the
+*other* branch never surfaces.
+
+```go
+formulaengine.FormulaInput{Expression: "IF(cond, 1, 1/0)"}
+// data: map[string]any{"cond": true}
+// result: 1 -- the "1/0" branch never runs
+```
 
 ### Built-in functions — text
 
-| Function | Expression | Result |
-|---|---|---|
-| `CONCAT` | `CONCAT("foo", "bar")` | `"foobar"` |
-| `UPPER` | `UPPER("hello")` | `"HELLO"` |
-| `LOWER` | `LOWER("HELLO")` | `"hello"` |
-| `TRIM` | `TRIM("  hello  ")` | `"hello"` |
-| `LENGTH` | `LENGTH("hello")` | `5` |
+Every argument must be a string, or `nil` (treated as `""` per
+`rfc.md` §10) — a number or bool is a `TypeError`, since the table
+doesn't define text-context coercion for those.
 
-`CONCAT` takes one or more arguments. All of them (and `UPPER`/
-`LOWER`/`TRIM`/`LENGTH`'s single argument) must be a string or `nil`
-(treated as `""`, per `rfc.md` §10) — a number or bool is a
-`TypeError`, since the table doesn't define text-context coercion for
-those. `LENGTH` counts Unicode runes, not bytes.
+#### CONCAT
+
+Concatenates one or more strings.
+
+```go
+formulaengine.FormulaInput{Expression: `CONCAT("foo", "bar")`}
+// data: none needed
+// result: "foobar"
+```
+
+#### UPPER / LOWER
+
+Converts case.
+
+```go
+formulaengine.FormulaInput{Expression: `UPPER("hello")`}
+// data: none needed
+// result: "HELLO"
+
+formulaengine.FormulaInput{Expression: `LOWER("HELLO")`}
+// data: none needed
+// result: "hello"
+```
+
+#### TRIM
+
+Removes leading/trailing whitespace.
+
+```go
+formulaengine.FormulaInput{Expression: `TRIM("  hello  ")`}
+// data: none needed
+// result: "hello"
+```
+
+#### LENGTH
+
+Character count — Unicode runes, not bytes, so multi-byte characters
+still count as one each.
+
+```go
+formulaengine.FormulaInput{Expression: `LENGTH("hello")`}
+// data: none needed
+// result: 5
+```
 
 ### Built-in functions — date
 
@@ -200,25 +313,52 @@ Dates are represented as Go `time.Time` values — there's no date
 literal syntax, so pass them in via the data map (as shown below) or
 build them with `NOW`.
 
-| Function | Expression | Data | Result |
-|---|---|---|---|
-| `NOW` | `NOW()` | — | current time as `time.Time` |
-| `DATE_ADD` | `DATE_ADD(start, 10, "days")` | `{"start": time.Date(2024,1,1,...)}` | `2024-01-11` |
-| `DATE_ADD` | `DATE_ADD(start, 2, "months")` | `{"start": time.Date(2024,1,1,...)}` | `2024-03-01` |
-| `DATE_DIFF` | `DATE_DIFF(d1, d2)` | `{"d1": time.Date(2024,1,1,...), "d2": time.Date(2024,1,11,...)}` | `10` |
+#### NOW
 
-`DATE_ADD(date, amount, unit)` supports `"days"`, `"months"`, and
-`"years"` (a negative `amount` subtracts). Month/year arithmetic uses
-Go's `time.Time.AddDate`, which rolls a day that doesn't exist in the
-target month into the following month (e.g. Jan 31 + 1 month lands in
-early March) rather than clamping to the month's last day — that's
-Go's documented behavior, not a bug in this library.
+Current time, with no arguments.
+
+```go
+formulaengine.FormulaInput{Expression: "NOW()"}
+// data: none needed
+// result: the current time, as a time.Time
+```
+
+#### DATE_ADD
+
+`DATE_ADD(date, amount, unit)` adds `amount` of `unit` (`"days"`,
+`"months"`, or `"years"`; a negative `amount` subtracts) to `date`.
+Month/year arithmetic uses Go's `time.Time.AddDate`, which rolls a
+day that doesn't exist in the target month into the following month
+(e.g. Jan 31 + 1 month lands in early March) rather than clamping to
+the month's last day — that's Go's documented behavior, not a bug in
+this library.
+
+```go
+formulaengine.FormulaInput{Expression: `DATE_ADD(start, 10, "days")`}
+// data: map[string]any{"start": time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)}
+// result: 2024-01-11
+
+formulaengine.FormulaInput{Expression: `DATE_ADD(start, 2, "months")`}
+// data: map[string]any{"start": time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)}
+// result: 2024-03-01
+```
+
+#### DATE_DIFF
 
 `DATE_DIFF(date1, date2)` returns the whole number of calendar days
 from `date1` to `date2` (negative if `date2` is earlier), computed
 from each date's own year/month/day rather than raw duration — so
 it's correct across both a leap year and a DST transition, where a
 "day" can otherwise be 23 or 25 real hours.
+
+```go
+formulaengine.FormulaInput{Expression: "DATE_DIFF(d1, d2)"}
+// data: map[string]any{
+//     "d1": time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC),
+//     "d2": time.Date(2024, 1, 11, 0, 0, 0, 0, time.UTC),
+// }
+// result: 10
+```
 
 ### Error handling
 
