@@ -72,6 +72,11 @@ func Evaluate(formulas []FormulaInput, data map[string]any) (map[string]Result, 
 
 	computed := make(map[string]any, len(sources))
 	for _, name := range dependency.TopologicalSort(graph) {
+		if err := firstFailedDependency(name, graph, results); err != nil {
+			results[name] = Result{Err: err}
+			continue
+		}
+
 		ctxData := make(map[string]any, len(data)+len(computed))
 		for k, v := range data {
 			ctxData[k] = v
@@ -90,6 +95,28 @@ func Evaluate(formulas []FormulaInput, data map[string]any) (map[string]Result, 
 	}
 
 	return results, nil
+}
+
+// firstFailedDependency reports whether any formula name directly
+// depends on (per graph.Edges) has already failed, so name can
+// inherit that failure with a clear "dependency failed" message
+// instead of being evaluated with the dependency silently missing
+// from context (where it would otherwise surface as a misleading
+// ErrUndefinedReference -- the dependency IS defined, it just failed
+// at runtime). Because dependencies are evaluated in topological
+// order before name, an inherited failure here already reflects any
+// failure the dependency itself inherited, so this naturally cascades
+// transitively without extra work.
+func firstFailedDependency(name string, graph *dependency.Graph, results map[string]Result) error {
+	for _, dep := range graph.Edges[name] {
+		if r, ok := results[dep]; ok && r.Err != nil {
+			return &apperror.FormulaError{
+				Code:    apperror.ErrRuntime,
+				Message: "depends on formula \"" + dep + "\", which failed: " + r.Err.Error(),
+			}
+		}
+	}
+	return nil
 }
 
 // firstUndefinedError picks the first undefined reference in sources'
