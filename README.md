@@ -399,13 +399,27 @@ formulaengine.FormulaInput{Expression: "BETWEEN(10, 1, 10)"}
 | Situation | Where it shows up |
 |---|---|
 | Invalid syntax (e.g. unbalanced parens) | that formula's `Result.Err` |
+| Runtime error (e.g. division by zero) | that formula's `Result.Err` |
 | Circular reference among the formulas in a call | `Evaluate`'s second return value — no results at all |
 | Reference to a field/formula not in the call | `Evaluate`'s second return value — no results at all |
 
 Circular and undefined references are call-level: since the whole
 dependency graph is invalid, nothing in that call is evaluated.
-Everything else (bad syntax, a type mismatch) is scoped to that one
-formula's `Result.Err`.
+Everything else (bad syntax, a type mismatch, a runtime error) is
+scoped to that one formula's `Result.Err` — an unrelated formula in
+the same call still gets its result:
+
+```go
+formulaengine.Evaluate(
+	[]formulaengine.FormulaInput{
+		{Name: "a", Expression: "1 / 0"},
+		{Name: "b", Expression: "5 + 5"},
+	},
+	nil,
+)
+// a: Err is set (division by zero), Value is nil
+// b: Err is nil, Value is 10 -- unaffected by a's failure
+```
 
 ## Not yet supported
 
