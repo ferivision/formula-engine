@@ -360,6 +360,37 @@ formulaengine.FormulaInput{Expression: "DATE_DIFF(d1, d2)"}
 // result: 10
 ```
 
+### Built-in functions — comparison
+
+#### EQUALS
+
+Reports whether two values are equal. Same-typed strings or bools
+compare directly; a number compared against a bool or a *numeric*
+string is coerced per `rfc.md` §10 (`true` → `1`, `nil` → `0`, numeric
+strings are parsed); a non-numeric string compared against a number
+is a `TypeError`, same as arithmetic's "number + string" rule.
+
+```go
+formulaengine.FormulaInput{Expression: "EQUALS(5, 5)"}
+// data: none needed
+// result: true
+
+formulaengine.FormulaInput{Expression: `EQUALS(5, "5")`}
+// data: none needed
+// result: true -- the numeric string is parsed and compared as 5
+```
+
+#### BETWEEN
+
+Reports whether a value falls within a range, **inclusive of both
+bounds**.
+
+```go
+formulaengine.FormulaInput{Expression: "BETWEEN(10, 1, 10)"}
+// data: none needed
+// result: true -- 10 is the upper bound itself, and BETWEEN includes it
+```
+
 ### Error handling
 
 | Situation | Where it shows up |
@@ -375,11 +406,12 @@ formula's `Result.Err`.
 
 ## Not yet supported
 
-- Comparison functions — the built-in function set is actively
-  growing. See
-  [`rfc.md` §15](docs/features/0001-core-engine/rfc.md) for the
-  implementation roadmap, or the repo's open issues for what's in
-  progress right now.
 - **Unary minus.** `ABS(-5)` and `-price` are not valid syntax yet —
   write `0 - 5` / `0 - price` instead. Negative number literals will
   be added in a future ticket.
+
+All planned Phase 1-12 built-in functions are now implemented. See
+[`rfc.md` §15](docs/features/0001-core-engine/rfc.md) for what's
+still ahead (type-coercion hardening, full partial-success error
+semantics, concurrency/benchmark verification), or the repo's open
+issues for what's in progress right now.
