@@ -421,6 +421,25 @@ formulaengine.Evaluate(
 // b: Err is nil, Value is 10 -- unaffected by a's failure
 ```
 
+If a formula instead *depends on* one that failed, it inherits that
+failure with a distinct message rather than being evaluated with a
+missing value or misreported as an undefined reference — `a` is
+defined, it just failed at runtime, which is a different situation
+from `a` not existing at all. This cascades transitively through any
+chain of dependents.
+
+```go
+formulaengine.Evaluate(
+	[]formulaengine.FormulaInput{
+		{Name: "a", Expression: "1 / 0"},
+		{Name: "b", Expression: "a + 1"},
+	},
+	nil,
+)
+// a.Err: runtime_error: division by zero
+// b.Err: runtime_error: depends on formula "a", which failed: runtime_error: division by zero
+```
+
 ## Not yet supported
 
 - **Unary minus.** `ABS(-5)` and `-price` are not valid syntax yet —

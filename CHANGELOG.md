@@ -170,3 +170,13 @@
   each formula's result is independent and only a successful result
   feeds later formulas. Locked in with a test and a README example
   (closes #27).
+- Fixed a real bug the acceptance test caught: a formula depending on
+  one that failed at runtime was misreported as
+  `ErrUndefinedReference` (the failed dependency's value never landed
+  in the context map, so it looked exactly like a missing field).
+  `Evaluate` now checks each formula's dependencies for a prior
+  failure before evaluating it and reports a distinct "depends on
+  formula X, which failed: ..." error instead -- which cascades
+  transitively through any chain of dependents for free, since a
+  dependency's own inherited failure is itself a failure. Completes
+  Phase 14 (closes #28).
