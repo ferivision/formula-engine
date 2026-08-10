@@ -6,6 +6,7 @@ import (
 	"github.com/ferivision/formula-engine/internal/evaluator"
 	"github.com/ferivision/formula-engine/internal/parser"
 
+	_ "github.com/ferivision/formula-engine/internal/registry/date"  // registers NOW, DATE_ADD
 	_ "github.com/ferivision/formula-engine/internal/registry/logic" // registers AND, OR, NOT
 	_ "github.com/ferivision/formula-engine/internal/registry/math"  // registers MAX, MIN, SUM, AVG, ROUND, FLOOR, CEIL, ABS
 	_ "github.com/ferivision/formula-engine/internal/registry/text"  // registers CONCAT, UPPER, LOWER, TRIM, LENGTH

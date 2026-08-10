@@ -194,6 +194,25 @@ The condition follows the same real-boolean-only rule as `AND`/`OR`.
 `TypeError`, since the table doesn't define text-context coercion for
 those. `LENGTH` counts Unicode runes, not bytes.
 
+### Built-in functions — date
+
+Dates are represented as Go `time.Time` values — there's no date
+literal syntax, so pass them in via the data map (as shown below) or
+build them with `NOW`.
+
+| Function | Expression | Data | Result |
+|---|---|---|---|
+| `NOW` | `NOW()` | — | current time as `time.Time` |
+| `DATE_ADD` | `DATE_ADD(start, 10, "days")` | `{"start": time.Date(2024,1,1,...)}` | `2024-01-11` |
+| `DATE_ADD` | `DATE_ADD(start, 2, "months")` | `{"start": time.Date(2024,1,1,...)}` | `2024-03-01` |
+
+`DATE_ADD(date, amount, unit)` supports `"days"`, `"months"`, and
+`"years"` (a negative `amount` subtracts). Month/year arithmetic uses
+Go's `time.Time.AddDate`, which rolls a day that doesn't exist in the
+target month into the following month (e.g. Jan 31 + 1 month lands in
+early March) rather than clamping to the month's last day — that's
+Go's documented behavior, not a bug in this library.
+
 ### Error handling
 
 | Situation | Where it shows up |
@@ -209,8 +228,8 @@ formula's `Result.Err`.
 
 ## Not yet supported
 
-- Date and comparison functions — the built-in function set is
-  actively growing. See
+- Comparison functions, and `DATE_DIFF` — the built-in function set
+  is actively growing. See
   [`rfc.md` §15](docs/features/0001-core-engine/rfc.md) for the
   implementation roadmap, or the repo's open issues for what's in
   progress right now.
