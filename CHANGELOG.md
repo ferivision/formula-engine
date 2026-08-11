@@ -180,3 +180,12 @@
   transitively through any chain of dependents for free, since a
   dependency's own inherited failure is itself a failure. Completes
   Phase 14 (closes #28).
+
+### Phase 15 — Concurrency Safety & Benchmarks
+
+- Added a concurrency test: 200 goroutines call `Evaluate`
+  simultaneously with distinct inputs, each asserting its own correct
+  result. Clean under `make test-race` -- no race found, no
+  production change needed, since the registry's function map is
+  populated once at `init()` and never mutated afterward (closes
+  #29).
