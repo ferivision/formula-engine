@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+## [1.0.0] - 2026-08-11
+
+First release: the complete core engine, rfc.md §15 Phases 1-15.
+
+A stateless Go library evaluating spreadsheet-style formulas —
+arithmetic with correct precedence, field references, formulas
+chaining off other formulas in the same call (resolved automatically
+via an iterative dependency graph + topological sort + cycle
+detection), and 20 built-in functions across math, logic (including
+short-circuiting `IF`), text, date, and comparison. Type coercion is
+consistent across every operator and function per rfc.md §10. Errors
+distinguish call-level (circular/undefined reference — no partial
+results) from formula-level (syntax/runtime — an unrelated formula in
+the same call still succeeds, and a dependent formula inherits a
+clear "dependency failed" error rather than a misleading one).
+
+Known gaps, not yet addressed: no unary minus; chained-formula
+evaluation scales superlinearly rather than linearly with chain
+length (see the Phase 15 entry below for measured numbers and the
+likely O(n²) cause).
+
 ### Phase 1 — Foundation & Public API Skeleton
 
 - Initialized Go module (`go 1.25`) and added `internal/apperror` with
