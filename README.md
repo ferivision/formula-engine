@@ -440,6 +440,18 @@ formulaengine.Evaluate(
 // b.Err: runtime_error: depends on formula "a", which failed: runtime_error: division by zero
 ```
 
+## Performance
+
+A single, non-chained formula evaluates in low single-digit
+microseconds. Chained formulas currently scale **superlinearly**, not
+linearly, with chain length — going from a 1,000-formula chain to a
+10,000-formula chain (10x the formulas) takes about 127x longer, not
+~10x. See `CHANGELOG.md`'s Phase 15 entry for the measured numbers and
+the likely cause. No performance budget is set (per the PRD's open
+question on this) and no fix has been made yet — if you're chaining
+more than a few hundred formulas in one call, benchmark your own
+workload rather than assuming linear scaling.
+
 ## Not yet supported
 
 - **Unary minus.** `ABS(-5)` and `-price` are not valid syntax yet —

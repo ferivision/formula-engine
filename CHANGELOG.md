@@ -189,3 +189,25 @@
   production change needed, since the registry's function map is
   populated once at `init()` and never mutated afterward (closes
   #29).
+- Added a benchmark suite at 10/100/1,000/10,000 chained formulas in
+  one `Evaluate` call, feeding real data into PRD §9's open question
+  on call-size performance (no budget is set here, per that section).
+  Measured on the CI container (arm64, `golang:1.25-bookworm`):
+
+  | Chain length | Time/op | Memory/op | Allocs/op |
+  |---|---|---|---|
+  | 10 | 10.9 µs | 13.8 KB | 180 |
+  | 100 | 235.8 µs | 414.6 KB | 1,713 |
+  | 1,000 | 19.4 ms | 33.8 MB | 17,242 |
+  | 10,000 | 2.47 s | 3.5 GB | 322,203 |
+
+  Scaling is clearly superlinear (1,000 -> 10,000 is a 10x chain but
+  ~127x the time and ~103x the memory), not the roughly-linear result
+  an O(n) pipeline would produce. The likely cause: `Evaluate`'s
+  per-formula loop rebuilds a fresh context map from `data` +
+  `computed` on every iteration, and `computed` grows by one entry
+  each time -- that's O(n²) total map-copy work across a chain of
+  length n. Recorded as a finding for a future optimization ticket,
+  not fixed here, per this ticket's explicit scope (closes #30).
+  **This completes Phase 15 and the core engine (rfc.md §15,
+  Phases 1-15).**
