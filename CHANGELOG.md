@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Feature 0002 — Array, Aggregate & Lookup Functions
+
+#### Phase 1 — Array & Record Value Types
+
+- Added `internal/evaluator/value.go`: the `Array`/`Record` value
+  types from rfc.md (0002) §2, plus `NewArray`, converting
+  `[]map[string]any` into a Record array and `[]any` into a scalar
+  array (empty slices convert into a valid empty `Array`, no error).
+  Internal-only — not yet reachable from the public API (that's
+  Phase 2's job) (closes #61).
+
 ## [1.0.0] - 2026-08-11
 
 First release: the complete core engine, rfc.md §15 Phases 1-15.
