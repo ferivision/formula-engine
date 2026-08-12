@@ -12,6 +12,14 @@
   array (empty slices convert into a valid empty `Array`, no error).
   Internal-only — not yet reachable from the public API (that's
   Phase 2's job) (closes #61).
+- Fixed a real gap while implementing mixed-type rejection: a `[]any`
+  where every element is `map[string]any` — exactly what
+  `json.Unmarshal` produces for a JSON array of objects, not
+  `[]map[string]any` — was being silently treated as a scalar array
+  instead of a Record array. `NewArray` now inspects `[]any` elements
+  to detect all-Record, all-scalar, or (rejected) mixed content. See
+  `docs/adr/0001-record-array-detection-via-element-inspection.md`
+  (closes #62). Phase 1 complete.
 
 ## [1.0.0] - 2026-08-11
 
