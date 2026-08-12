@@ -21,8 +21,13 @@ type Array struct {
 type Record map[string]Value
 
 // NewArray converts a Go slice into an Array: []map[string]any
-// becomes a Record array, []any becomes a scalar array. Anything
-// else is a formula-level TypeError.
+// becomes a Record array, []any becomes either a Record or a scalar
+// array depending on its elements (see newArrayFromAnySlice --
+// []any of all map[string]any is what json.Unmarshal into `any`
+// actually produces for a JSON array of objects, not
+// []map[string]any directly, so this case matters in practice, not
+// just in theory). Anything else -- including a []any that mixes
+// Records and scalars -- is a formula-level TypeError.
 func NewArray(v any) (Array, error) {
 	switch s := v.(type) {
 	case []map[string]any:
@@ -32,10 +37,29 @@ func NewArray(v any) (Array, error) {
 		}
 		return Array{Elements: elements, IsRecord: true}, nil
 	case []any:
-		elements := make([]Value, len(s))
-		copy(elements, s)
-		return Array{Elements: elements, IsRecord: false}, nil
+		return newArrayFromAnySlice(s)
 	default:
 		return Array{}, newTypeError("expected an array ([]any or []map[string]any)")
 	}
+}
+
+func newArrayFromAnySlice(s []any) (Array, error) {
+	elements := make([]Value, len(s))
+	hasRecord, hasScalar := false, false
+
+	for i, e := range s {
+		if m, ok := e.(map[string]any); ok {
+			hasRecord = true
+			elements[i] = Record(m)
+			continue
+		}
+		hasScalar = true
+		elements[i] = e
+	}
+
+	if hasRecord && hasScalar {
+		return Array{}, newTypeError("array mixes records and scalar values")
+	}
+
+	return Array{Elements: elements, IsRecord: hasRecord}, nil
 }

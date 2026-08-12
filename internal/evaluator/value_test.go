@@ -75,6 +75,52 @@ func TestNewArray_EmptyRecordSlice(t *testing.T) {
 	}
 }
 
+// A []any where every element happens to be map[string]any is the
+// natural shape JSON decoding produces (json.Unmarshal into `any`
+// gives []any of map[string]any, never []map[string]any directly) --
+// so this must be recognized as a Record array too, not just the
+// concretely-typed []map[string]any case.
+func TestNewArray_AllRecordsViaAnySlice(t *testing.T) {
+	input := []any{
+		map[string]any{"sku": "A1", "qty": 5.0},
+		map[string]any{"sku": "B2", "qty": 3.0},
+	}
+	arr, err := NewArray(input)
+	if err != nil {
+		t.Fatalf("NewArray() error = %v", err)
+	}
+	if !arr.IsRecord {
+		t.Error("IsRecord = false, want true")
+	}
+	if len(arr.Elements) != 2 {
+		t.Fatalf("len(Elements) = %d, want 2", len(arr.Elements))
+	}
+	rec, ok := arr.Elements[0].(Record)
+	if !ok {
+		t.Fatalf("Elements[0] = %T, want Record", arr.Elements[0])
+	}
+	if rec["sku"] != "A1" {
+		t.Errorf("Elements[0][\"sku\"] = %v, want A1", rec["sku"])
+	}
+}
+
+// rfc.md §2: mixing scalars and Records is a formula-level TypeError
+// at construction time.
+func TestNewArray_MixedRecordAndScalarErrors(t *testing.T) {
+	input := []any{
+		map[string]any{"sku": "A1"},
+		5.0,
+	}
+	_, err := NewArray(input)
+	if err == nil {
+		t.Fatal("NewArray() error = nil, want type error for mixed Record/scalar array")
+	}
+	var fe *apperror.FormulaError
+	if !errors.As(err, &fe) || fe.Code != apperror.ErrTypeMismatch {
+		t.Errorf("error = %v, want ErrTypeMismatch", err)
+	}
+}
+
 func TestNewArray_UnsupportedTypeErrors(t *testing.T) {
 	_, err := NewArray("not an array")
 	if err == nil {
