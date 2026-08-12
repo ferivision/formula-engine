@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/ferivision/formula-engine/internal/parser"
@@ -22,9 +23,12 @@ func Evaluate(node *parser.Node, ctx *Context) (registry.Value, error) {
 	case parser.NodeBinary:
 		return evalBinary(node, ctx)
 	case parser.NodeIdentifier:
-		v, ok := ctx.Lookup(node.Value)
-		if !ok {
-			return nil, newUndefinedReferenceError(node.Value)
+		v, err := ctx.Lookup(node.Value)
+		if err != nil {
+			if errors.Is(err, errFieldNotFound) {
+				return nil, newUndefinedReferenceError(node.Value)
+			}
+			return nil, err
 		}
 		return v, nil
 	case parser.NodeFunctionCall:

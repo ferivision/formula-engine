@@ -28,6 +28,16 @@
   unconverted. A conversion failure falls through to the raw value
   for now -- proper error propagation is the next ticket (closes
   #64).
+- `Context.Lookup` now returns `(Value, error)` instead of
+  `(Value, bool)`: a malformed array (mixed-type `[]any`) surfaces its
+  construction error as soon as it's looked up, per rfc.md §9's "not
+  deferred to first use" -- replacing #64's temporary silent-fallback
+  behavior. A field genuinely absent from the data map is still
+  distinguished (via a sentinel `errFieldNotFound`) and still reports
+  `ErrUndefinedReference`, not the new `TypeError`. An identifier
+  resolving to an already-computed `Array` (e.g. a future `FILTER`
+  result) passes through unchanged. This is a real internal contract
+  change, documented as ADR 0002 (closes #65). Phase 2 complete.
 
 ## [1.0.0] - 2026-08-11
 
