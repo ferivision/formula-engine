@@ -21,6 +21,14 @@
   `docs/adr/0001-record-array-detection-via-element-inspection.md`
   (closes #62). Phase 1 complete.
 
+#### Phase 2 — Evaluator Support for Array Identifiers
+
+- `Context.Lookup` now resolves a `[]map[string]any`/`[]any` data
+  value into an `Array` instead of passing the raw Go slice through
+  unconverted. A conversion failure falls through to the raw value
+  for now -- proper error propagation is the next ticket (closes
+  #64).
+
 ## [1.0.0] - 2026-08-11
 
 First release: the complete core engine, rfc.md §15 Phases 1-15.
