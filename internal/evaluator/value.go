@@ -48,6 +48,13 @@ func newArrayFromAnySlice(s []any) (Array, error) {
 	hasRecord, hasScalar := false, false
 
 	for i, e := range s {
+		// A nil slot (rfc.md §9's "null element") is neutral -- it
+		// belongs equally well in a Record array or a scalar array,
+		// so it must not itself trigger the mixed-type rejection
+		// below.
+		if e == nil {
+			continue
+		}
 		if m, ok := e.(map[string]any); ok {
 			hasRecord = true
 			elements[i] = Record(m)

@@ -39,6 +39,20 @@
   result) passes through unchanged. This is a real internal contract
   change, documented as ADR 0002 (closes #65). Phase 2 complete.
 
+#### Phase 3 — Conditional Aggregates
+
+- Added `internal/registry/aggregate`: `SUMIF`, `COUNTIF` -- the
+  first functions to actually consume an `Array`. An empty array
+  returns `0` for both (not an error); a `nil` element is skipped, not
+  counted/summed; a scalar (non-record) array is a formula-level
+  `TypeError`. While implementing null-element handling, found and
+  fixed a real bug in `internal/evaluator/value.go`: a `nil` slot in
+  an otherwise-all-Records `[]any` was wrongly flagged as "mixed
+  types" (`nil` doesn't type-assert as `map[string]any`), which would
+  have made rfc.md §9's null-skipping rule impossible to satisfy for
+  a genuinely blank record slot. First feature-0002 work reachable
+  from the public API and documented in README (closes #66).
+
 ## [1.0.0] - 2026-08-11
 
 First release: the complete core engine, rfc.md §15 Phases 1-15.

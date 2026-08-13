@@ -121,6 +121,43 @@ func TestNewArray_MixedRecordAndScalarErrors(t *testing.T) {
 	}
 }
 
+// rfc.md §9: "null element inside an Array passed to an aggregate ->
+// Skipped." A nil slot must not itself count as "a scalar" for
+// mixed-type detection -- otherwise an all-Records array with one
+// blank slot would be wrongly rejected as mixing Records and
+// scalars, when it's really just a Record array with a hole in it.
+func TestNewArray_NilElementDoesNotTriggerMixedTypeRejection(t *testing.T) {
+	input := []any{
+		map[string]any{"sku": "A1"},
+		nil,
+		map[string]any{"sku": "B2"},
+	}
+	arr, err := NewArray(input)
+	if err != nil {
+		t.Fatalf("NewArray() error = %v, want nil element tolerated", err)
+	}
+	if !arr.IsRecord {
+		t.Error("IsRecord = false, want true")
+	}
+	if len(arr.Elements) != 3 || arr.Elements[1] != nil {
+		t.Errorf("Elements = %v, want middle element nil", arr.Elements)
+	}
+}
+
+func TestNewArray_NilElementAmongScalarsIsFine(t *testing.T) {
+	input := []any{1.0, nil, 2.0}
+	arr, err := NewArray(input)
+	if err != nil {
+		t.Fatalf("NewArray() error = %v", err)
+	}
+	if arr.IsRecord {
+		t.Error("IsRecord = true, want false")
+	}
+	if len(arr.Elements) != 3 || arr.Elements[1] != nil {
+		t.Errorf("Elements = %v, want middle element nil", arr.Elements)
+	}
+}
+
 func TestNewArray_UnsupportedTypeErrors(t *testing.T) {
 	_, err := NewArray("not an array")
 	if err == nil {

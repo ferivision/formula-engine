@@ -6,6 +6,7 @@ import (
 	"github.com/ferivision/formula-engine/internal/evaluator"
 	"github.com/ferivision/formula-engine/internal/parser"
 
+	_ "github.com/ferivision/formula-engine/internal/registry/aggregate"  // registers SUMIF, COUNTIF
 	_ "github.com/ferivision/formula-engine/internal/registry/comparison" // registers EQUALS, BETWEEN
 	_ "github.com/ferivision/formula-engine/internal/registry/date"       // registers NOW, DATE_ADD
 	_ "github.com/ferivision/formula-engine/internal/registry/logic"      // registers AND, OR, NOT
