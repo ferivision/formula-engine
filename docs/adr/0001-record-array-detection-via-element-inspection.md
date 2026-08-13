@@ -50,3 +50,15 @@ only possible (and only checked) on the `[]any` path.
   always errors, even if the caller intended something else (e.g. a
   scalar array that happens to contain one stray map) — there's no
   partial or best-effort interpretation.
+
+## Update (2026-08-13, issue F2-FASE-3.1)
+
+A `nil` slot in the `[]any` input does **not** count toward either
+"has a Record" or "has a scalar" — it's treated as neutral. Without
+this, an otherwise-uniform Record array with one blank/null element
+(rfc.md §9's "null element... skipped") would trip the mixed-type
+rejection above, since a `nil` value doesn't type-assert as
+`map[string]any` and would otherwise fall into the "scalar" bucket.
+This surfaced while implementing `SUMIF`/`COUNTIF`'s null-skipping
+requirement — a corollary of this ADR's original decision, not a
+separate one, so it's recorded here rather than as its own ADR.

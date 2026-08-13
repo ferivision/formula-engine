@@ -394,6 +394,51 @@ formulaengine.FormulaInput{Expression: "BETWEEN(10, 1, 10)"}
 // result: true -- 10 is the upper bound itself, and BETWEEN includes it
 ```
 
+### Arrays
+
+Arrays are a new value type on top of the scalars above: an ordered
+list of either **records** (`[]map[string]any`, or a `[]any` where
+every element is a `map[string]any` — e.g. what `json.Unmarshal`
+produces for a JSON array of objects) or plain scalars (`[]any` of
+numbers/strings/bools). Pass one in via the data map; there's no array
+literal syntax in formulas themselves.
+
+```go
+formulaengine.Evaluate(
+	[]formulaengine.FormulaInput{{Name: "result", Expression: `SUMIF(orders, "status", "shipped", "qty")`}},
+	map[string]any{
+		"orders": []map[string]any{
+			{"status": "shipped", "qty": 5.0},
+			{"status": "pending", "qty": 2.0},
+			{"status": "shipped", "qty": 3.0},
+		},
+	},
+)
+// result: 8
+```
+
+A `nil` element in the array (a blank slot) is skipped by aggregate
+functions, not counted or summed. Mixing records and scalars in the
+same array is a `TypeError` as soon as the array is looked up, not
+deferred until a function tries to use it.
+
+#### SUMIF / COUNTIF
+
+`SUMIF(array, conditionField, conditionValue, sumField)` sums
+`sumField` across records where `conditionField` equals
+`conditionValue`. `COUNTIF(array, conditionField, conditionValue)`
+counts matching records instead of summing. Both require an array of
+records (not scalars); an **empty** array returns `0` for both, not
+an error.
+
+```go
+formulaengine.FormulaInput{Expression: `SUMIF(orders, "status", "shipped", "qty")`}
+// result: 8 (5 + 3, the two "shipped" orders' qty)
+
+formulaengine.FormulaInput{Expression: `COUNTIF(orders, "status", "shipped")`}
+// result: 2
+```
+
 ### Error handling
 
 | Situation | Where it shows up |
@@ -457,9 +502,10 @@ workload rather than assuming linear scaling.
 - **Unary minus.** `ABS(-5)` and `-price` are not valid syntax yet —
   write `0 - 5` / `0 - price` instead. Negative number literals will
   be added in a future ticket.
-
-All planned Phase 1-12 built-in functions are now implemented. See
-[`rfc.md` §15](docs/features/0001-core-engine/rfc.md) for what's
-still ahead (type-coercion hardening, full partial-success error
-semantics, concurrency/benchmark verification), or the repo's open
-issues for what's in progress right now.
+- **More array functions.** `AVERAGEIF`/`MINIF`/`MAXIF` (conditional
+  aggregates beyond `SUMIF`/`COUNTIF`), the transform functions
+  (`FILTER`, `SORT`, `UNIQUE`, `FLATTEN`), and the lookup functions
+  (`VLOOKUP`, `MATCH`, `INDEX`, `FIND`) are still being built out. See
+  [feature-0002's rfc.md §14](docs/features/0002-array-aggregate-lookup-function/feature-0002-rfc.md)
+  for the roadmap, or the repo's open issues for what's in progress
+  right now.
