@@ -52,6 +52,13 @@
   have made rfc.md §9's null-skipping rule impossible to satisfy for
   a genuinely blank record slot. First feature-0002 work reachable
   from the public API and documented in README (closes #66).
+- Added `AVERAGEIF`, `MINIF`, `MAXIF` -- same shape as `SUMIF`, reusing
+  #66's shared aggregate helpers. Deliberately different from
+  `SUMIF`/`COUNTIF`: an empty array *or* zero matching records is a
+  formula-level `TypeError` for all three, per rfc.md §9 -- average/
+  min/max of nothing is undefined, unlike sum/count which naturally
+  resolve to `0`. Null elements are still skipped. Completes Phase 3
+  (closes #67).
 
 ## [1.0.0] - 2026-08-11
 

@@ -439,6 +439,26 @@ formulaengine.FormulaInput{Expression: `COUNTIF(orders, "status", "shipped")`}
 // result: 2
 ```
 
+#### AVERAGEIF / MINIF / MAXIF
+
+Same shape as `SUMIF`: `AVERAGEIF(array, conditionField, conditionValue,
+avgField)`, `MINIF(..., minField)`, `MAXIF(..., maxField)`. **Unlike**
+`SUMIF`/`COUNTIF`, an empty array — or an array with zero matching
+records — is a formula-level `TypeError` for all three, not `0`:
+averaging, min, or max over nothing is undefined, so there's no
+sensible zero-value result to return instead.
+
+```go
+formulaengine.FormulaInput{Expression: `AVERAGEIF(orders, "status", "shipped", "qty")`}
+// result: 5 -- average of the two "shipped" orders' qty (4 and 6)
+
+formulaengine.FormulaInput{Expression: `MINIF(orders, "status", "shipped", "qty")`}
+// result: 4
+
+formulaengine.FormulaInput{Expression: `MAXIF(orders, "status", "shipped", "qty")`}
+// result: 6
+```
+
 ### Error handling
 
 | Situation | Where it shows up |
