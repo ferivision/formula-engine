@@ -459,6 +459,37 @@ formulaengine.FormulaInput{Expression: `MAXIF(orders, "status", "shipped", "qty"
 // result: 6
 ```
 
+#### FILTER
+
+`FILTER(array, conditionField, conditionValue)` returns a **new**
+array containing only the records where `conditionField` equals
+`conditionValue` — the input array is never modified. A `nil` element
+can't be meaningfully matched against a condition, so it's silently
+excluded from the result rather than causing an error.
+
+```go
+formulaengine.FormulaInput{Expression: `FILTER(orders, "status", "shipped")`}
+// result: an Array of just the "shipped" records
+```
+
+#### UNIQUE
+
+`UNIQUE(array)` deduplicates a **scalar** array by direct value
+equality, preserving first-seen order — `1` (number) and `"1"`
+(string) are treated as different values here, unlike `FILTER`'s
+condition matching, which does coerce across types. `UNIQUE(array,
+field)` instead deduplicates a **record** array by a field's value,
+keeping the first record seen for each distinct value.
+
+```go
+formulaengine.FormulaInput{Expression: "UNIQUE(nums)"}
+// data: map[string]any{"nums": []any{1.0, 2.0, 1.0, 3.0}}
+// result: an Array of [1, 2, 3]
+
+formulaengine.FormulaInput{Expression: `UNIQUE(orders, "sku")`}
+// result: an Array with one record per distinct "sku", first-seen order
+```
+
 ### Error handling
 
 | Situation | Where it shows up |
@@ -522,10 +553,9 @@ workload rather than assuming linear scaling.
 - **Unary minus.** `ABS(-5)` and `-price` are not valid syntax yet —
   write `0 - 5` / `0 - price` instead. Negative number literals will
   be added in a future ticket.
-- **More array functions.** `AVERAGEIF`/`MINIF`/`MAXIF` (conditional
-  aggregates beyond `SUMIF`/`COUNTIF`), the transform functions
-  (`FILTER`, `SORT`, `UNIQUE`, `FLATTEN`), and the lookup functions
-  (`VLOOKUP`, `MATCH`, `INDEX`, `FIND`) are still being built out. See
+- **More array functions.** `SORT` and `FLATTEN` (the remaining
+  transform functions), and the lookup functions (`VLOOKUP`, `MATCH`,
+  `INDEX`, `FIND`) are still being built out. See
   [feature-0002's rfc.md §14](docs/features/0002-array-aggregate-lookup-function/feature-0002-rfc.md)
   for the roadmap, or the repo's open issues for what's in progress
   right now.

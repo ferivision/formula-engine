@@ -60,6 +60,17 @@
   resolve to `0`. Null elements are still skipped. Completes Phase 3
   (closes #67).
 
+#### Phase 4 — Transformations
+
+- Added `internal/registry/transform`: `FILTER`, `UNIQUE`. `FILTER`
+  returns a new array of matching records without mutating the input;
+  `UNIQUE(array)` dedupes a scalar array by direct value equality
+  (no numeric coercion, unlike condition matching), preserving
+  first-seen order (PRD use case 3); `UNIQUE(array, field)` dedupes a
+  record array by a field's value instead. Both return an empty array
+  for empty input, not an error. Verified no shared backing-array
+  mutation with explicit tests (closes #68).
+
 ## [1.0.0] - 2026-08-11
 
 First release: the complete core engine, rfc.md §15 Phases 1-15.
