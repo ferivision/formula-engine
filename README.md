@@ -490,6 +490,36 @@ formulaengine.FormulaInput{Expression: `UNIQUE(orders, "sku")`}
 // result: an Array with one record per distinct "sku", first-seen order
 ```
 
+#### SORT
+
+`SORT(array, sortField, direction)` returns a **new**, sorted array —
+`direction` must be `"asc"` or `"desc"`, anything else is a formula-
+level error. Uses Go's `sort.SliceStable` internally, so records
+sharing an equal sort key keep their original relative order rather
+than being reshuffled arbitrarily.
+
+```go
+formulaengine.FormulaInput{Expression: `SORT(orders, "qty", "asc")`}
+// result: orders ordered by qty ascending, ties broken by original order
+```
+
+#### FLATTEN
+
+`FLATTEN(arrayOfArrays)` concatenates an array of nested arrays into
+one flat array — the one place nested arrays are allowed in this
+library, since it's consuming pre-existing nesting (e.g. from a
+consumer that passed `[]any{[]any{...}, []any{...}}`) rather than
+producing or navigating it elsewhere.
+
+```go
+formulaengine.FormulaInput{Expression: "FLATTEN(groups)"}
+// data: map[string]any{"groups": []any{[]any{1.0, 2.0}, []any{3.0, 4.0}}}
+// result: an Array of [1, 2, 3, 4]
+```
+
+A concretely-typed Go `[][]any` isn't recognized here (or anywhere
+`NewArray` converts data) — wrap nested slices as `[]any{...}` instead.
+
 ### Error handling
 
 | Situation | Where it shows up |
@@ -553,8 +583,7 @@ workload rather than assuming linear scaling.
 - **Unary minus.** `ABS(-5)` and `-price` are not valid syntax yet —
   write `0 - 5` / `0 - price` instead. Negative number literals will
   be added in a future ticket.
-- **More array functions.** `SORT` and `FLATTEN` (the remaining
-  transform functions), and the lookup functions (`VLOOKUP`, `MATCH`,
+- **More array functions.** The lookup functions (`VLOOKUP`, `MATCH`,
   `INDEX`, `FIND`) are still being built out. See
   [feature-0002's rfc.md §14](docs/features/0002-array-aggregate-lookup-function/feature-0002-rfc.md)
   for the roadmap, or the repo's open issues for what's in progress
