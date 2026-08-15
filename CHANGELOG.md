@@ -70,6 +70,16 @@
   record array by a field's value instead. Both return an empty array
   for empty input, not an error. Verified no shared backing-array
   mutation with explicit tests (closes #68).
+- Added `SORT`, `FLATTEN`. `SORT(array, sortField, direction)` uses
+  `sort.SliceStable` -- never `sort.Slice` -- verified both with a
+  behavioral test (elements sharing an equal sort key keep their
+  original relative order, per PRD NFR-3) and a static check on
+  `sort.go`'s source. `direction` must be `"asc"`/`"desc"`.
+  `FLATTEN(arrayOfArrays)` concatenates nested arrays -- the one
+  deliberate exception to "no nested arrays" (rfc.md §7) -- accepting
+  `[]any`/`[]map[string]any` sub-arrays; a concretely-typed `[][]any`
+  isn't recognized (documented as a known gap, not fixed here).
+  Completes Phase 4 (closes #69).
 
 ## [1.0.0] - 2026-08-11
 
