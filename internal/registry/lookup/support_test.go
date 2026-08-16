@@ -1,0 +1,59 @@
+package lookup
+
+import (
+	"errors"
+	"testing"
+
+	"github.com/ferivision/formula-engine/internal/apperror"
+	"github.com/ferivision/formula-engine/internal/evaluator"
+	"github.com/ferivision/formula-engine/internal/registry"
+)
+
+func TestToRecordArray_RejectsScalarArray(t *testing.T) {
+	arr, _ := evaluator.NewArray([]any{1.0})
+	if _, err := toRecordArray("F", arr); err == nil {
+		t.Fatal("toRecordArray() error = nil, want type error for scalar array")
+	}
+}
+
+func TestToRecordArray_AllowsEmptyArray(t *testing.T) {
+	arr, _ := evaluator.NewArray([]any{})
+	if _, err := toRecordArray("F", arr); err != nil {
+		t.Errorf("toRecordArray() error = %v, want nil for empty array", err)
+	}
+}
+
+func TestIsNullElement(t *testing.T) {
+	if !isNullElement(nil) {
+		t.Error("isNullElement(nil) = false, want true")
+	}
+	if isNullElement(5.0) {
+		t.Error("isNullElement(5.0) = true, want false")
+	}
+}
+
+func TestValuesEqual_MixedNumberAndNumericString(t *testing.T) {
+	eq, err := valuesEqual(5.0, "5")
+	if err != nil || !eq {
+		t.Errorf("valuesEqual() = (%v, %v), want (true, nil)", eq, err)
+	}
+}
+
+func TestCheckArgCount_TooFew(t *testing.T) {
+	err := checkArgCount("F", 3, 3, []registry.Value{1.0})
+	var fe *apperror.FormulaError
+	if !errors.As(err, &fe) || fe.Code != apperror.ErrRuntime {
+		t.Errorf("checkArgCount() error = %v, want ErrRuntime", err)
+	}
+}
+
+// Interim code per this ticket's note -- Phase 7 migrates this to the
+// dedicated ErrLookupNotFound once it exists. Must stay formula-level
+// (never call-level), which apperror.ErrRuntime already is.
+func TestNewNotFoundError_IsFormulaLevel(t *testing.T) {
+	err := newNotFoundError("F", "missing-key")
+	var fe *apperror.FormulaError
+	if !errors.As(err, &fe) || fe.Code != apperror.ErrRuntime {
+		t.Errorf("newNotFoundError() = %v, want ErrRuntime (interim for ErrLookupNotFound)", err)
+	}
+}
