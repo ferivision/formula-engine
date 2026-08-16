@@ -81,6 +81,17 @@
   isn't recognized (documented as a known gap, not fixed here).
   Completes Phase 4 (closes #69).
 
+#### Phase 5 — Lookup Functions
+
+- Added `internal/registry/lookup`: `VLOOKUP`, `MATCH`. A key not
+  found in the table is a formula-level error -- kept an interim
+  `ErrRuntime` for now (the dedicated `ErrLookupNotFound` code is
+  scoped to Phase 7, same sequencing gap as `ErrArrayTypeMismatch`
+  on #66), migrated later, but already correctly formula-level so it
+  doesn't block an unrelated formula in the same `Evaluate` call
+  (PRD use case 5, covered by an explicit integration test) (closes
+  #70).
+
 ## [1.0.0] - 2026-08-11
 
 First release: the complete core engine, rfc.md §15 Phases 1-15.

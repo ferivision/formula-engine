@@ -520,6 +520,30 @@ formulaengine.FormulaInput{Expression: "FLATTEN(groups)"}
 A concretely-typed Go `[][]any` isn't recognized here (or anywhere
 `NewArray` converts data) — wrap nested slices as `[]any{...}` instead.
 
+#### VLOOKUP
+
+`VLOOKUP(key, table, keyField, returnField)` finds the first record in
+`table` where `keyField` equals `key`, and returns that record's
+`returnField` value. A key that isn't found is a **formula-level**
+error — it doesn't block an unrelated formula in the same `Evaluate`
+call.
+
+```go
+formulaengine.FormulaInput{Expression: `VLOOKUP("B2", prices, "sku", "price")`}
+// result: 20
+```
+
+#### MATCH
+
+`MATCH(key, array, field)` returns the 1-based position of the first
+record where `field` equals `key` — same not-found treatment as
+`VLOOKUP`.
+
+```go
+formulaengine.FormulaInput{Expression: `MATCH("B2", prices, "sku")`}
+// result: 2
+```
+
 ### Error handling
 
 | Situation | Where it shows up |
@@ -583,8 +607,8 @@ workload rather than assuming linear scaling.
 - **Unary minus.** `ABS(-5)` and `-price` are not valid syntax yet —
   write `0 - 5` / `0 - price` instead. Negative number literals will
   be added in a future ticket.
-- **More array functions.** The lookup functions (`VLOOKUP`, `MATCH`,
-  `INDEX`, `FIND`) are still being built out. See
+- **More array functions.** `INDEX` and `FIND` (the remaining lookup
+  functions) are still being built out. See
   [feature-0002's rfc.md §14](docs/features/0002-array-aggregate-lookup-function/feature-0002-rfc.md)
   for the roadmap, or the repo's open issues for what's in progress
   right now.
