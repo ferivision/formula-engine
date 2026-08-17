@@ -544,6 +544,31 @@ formulaengine.FormulaInput{Expression: `MATCH("B2", prices, "sku")`}
 // result: 2
 ```
 
+#### INDEX
+
+`INDEX(array, position)` returns the element at a 1-based `position`
+— works on either a scalar or a record array, unlike the rest of this
+category which needs records for field access. An out-of-range
+`position` (including `0` or negative) is a formula-level error.
+
+```go
+formulaengine.FormulaInput{Expression: "INDEX(orders, 2)"}
+// result: the second record in orders
+```
+
+#### FIND
+
+`FIND(array, conditionField, conditionValue)` returns the first whole
+record where `conditionField` equals `conditionValue` — same
+not-found treatment as `VLOOKUP`/`MATCH`. Unlike `VLOOKUP`, which
+returns one named field, `FIND` gives back the entire matching
+record.
+
+```go
+formulaengine.FormulaInput{Expression: `FIND(orders, "status", "shipped")`}
+// result: the first record whose status is "shipped"
+```
+
 ### Error handling
 
 | Situation | Where it shows up |
@@ -607,8 +632,9 @@ workload rather than assuming linear scaling.
 - **Unary minus.** `ABS(-5)` and `-price` are not valid syntax yet —
   write `0 - 5` / `0 - price` instead. Negative number literals will
   be added in a future ticket.
-- **More array functions.** `INDEX` and `FIND` (the remaining lookup
-  functions) are still being built out. See
-  [feature-0002's rfc.md §14](docs/features/0002-array-aggregate-lookup-function/feature-0002-rfc.md)
-  for the roadmap, or the repo's open issues for what's in progress
-  right now.
+
+All planned array/aggregate/lookup functions are now implemented. See
+[feature-0002's rfc.md §14](docs/features/0002-array-aggregate-lookup-function/feature-0002-rfc.md)
+for what's still ahead (type-coercion hardening, full error-model/
+integration tests, benchmarks), or the repo's open issues for what's
+in progress right now.

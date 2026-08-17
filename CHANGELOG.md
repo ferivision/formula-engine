@@ -91,6 +91,15 @@
   doesn't block an unrelated formula in the same `Evaluate` call
   (PRD use case 5, covered by an explicit integration test) (closes
   #70).
+- Added `INDEX`, `FIND`. `INDEX(array, position)` works on either a
+  scalar or a record array (unlike the rest of this category, which
+  needs records) and returns a plain `ErrRuntime` for an out-of-range
+  1-based `position` -- rfc.md §4 explicitly says to reuse this
+  existing code rather than add a new one. `FIND(array,
+  conditionField, conditionValue)` returns the whole first matching
+  record (not a single field, unlike `VLOOKUP`), with the same
+  not-found treatment. Completes Phase 5 -- all planned array/
+  aggregate/lookup functions are now implemented (closes #71).
 
 ## [1.0.0] - 2026-08-11
 

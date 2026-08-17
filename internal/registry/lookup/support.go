@@ -38,6 +38,17 @@ func checkArgCount(name string, minArgs, maxArgs int, args []registry.Value) err
 	return nil
 }
 
+// toArray requires v to be an Array, scalar or Record -- INDEX works
+// on either, unlike the rest of this category which needs Records
+// for field access.
+func toArray(name string, v registry.Value) (evaluator.Array, error) {
+	arr, ok := v.(evaluator.Array)
+	if !ok {
+		return evaluator.Array{}, newTypeError(fmt.Sprintf("%s: expected an array, got %T", name, v))
+	}
+	return arr, nil
+}
+
 // toRecordArray requires v to be an Array of Records -- this category
 // reads named fields per element, which only a Record supports. An
 // empty array is let through regardless of its IsRecord flag, since
