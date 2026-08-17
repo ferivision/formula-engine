@@ -9,6 +9,22 @@ import (
 	"github.com/ferivision/formula-engine/internal/registry"
 )
 
+func TestToArray_RejectsNonArray(t *testing.T) {
+	_, err := toArray("F", 5.0)
+	var fe *apperror.FormulaError
+	if !errors.As(err, &fe) || fe.Code != apperror.ErrTypeMismatch {
+		t.Errorf("toArray() error = %v, want ErrTypeMismatch", err)
+	}
+}
+
+func TestToArray_AcceptsScalarArray(t *testing.T) {
+	arr, _ := evaluator.NewArray([]any{1.0, 2.0})
+	got, err := toArray("F", arr)
+	if err != nil || len(got.Elements) != 2 {
+		t.Errorf("toArray() = (%v, %v), want the array unchanged", got, err)
+	}
+}
+
 func TestToRecordArray_RejectsScalarArray(t *testing.T) {
 	arr, _ := evaluator.NewArray([]any{1.0})
 	if _, err := toRecordArray("F", arr); err == nil {
