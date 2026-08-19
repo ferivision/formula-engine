@@ -110,6 +110,38 @@ func TestCoercion_IntTreatedAsNumber(t *testing.T) {
 	}
 }
 
+// rfc.md (0002) §9: Array + scalar in an arithmetic context has no
+// implicit broadcast -- it's a formula-level TypeError.
+func TestCoercion_ArrayPlusScalarErrors(t *testing.T) {
+	node := parseHelper(t, "orders + 5")
+	_, err := Evaluate(node, NewContext(map[string]any{"orders": []any{1.0, 2.0}}))
+	if err == nil {
+		t.Fatal("Evaluate() error = nil, want type error for array + scalar")
+	}
+	var fe *apperror.FormulaError
+	if !errors.As(err, &fe) || fe.Code != apperror.ErrTypeMismatch {
+		t.Errorf("error = %v, want ErrTypeMismatch", err)
+	}
+}
+
+// rfc.md (0002) §9: Array + Array outside of FLATTEN is a
+// formula-level TypeError -- there's no generic combining operator
+// for two arrays via "+".
+func TestCoercion_ArrayPlusArrayErrors(t *testing.T) {
+	node := parseHelper(t, "a + b")
+	_, err := Evaluate(node, NewContext(map[string]any{
+		"a": []any{1.0, 2.0},
+		"b": []any{3.0, 4.0},
+	}))
+	if err == nil {
+		t.Fatal("Evaluate() error = nil, want type error for array + array")
+	}
+	var fe *apperror.FormulaError
+	if !errors.As(err, &fe) || fe.Code != apperror.ErrTypeMismatch {
+		t.Errorf("error = %v, want ErrTypeMismatch", err)
+	}
+}
+
 func TestCoercion_MismatchedTypeWithNoDefinedRule(t *testing.T) {
 	_, err := coerceForArithmetic([]int{1, 2})
 	var fe *apperror.FormulaError
