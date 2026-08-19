@@ -422,6 +422,14 @@ functions, not counted or summed. Mixing records and scalars in the
 same array is a `TypeError` as soon as the array is looked up, not
 deferred until a function tries to use it.
 
+An array doesn't participate in plain arithmetic operators — there's
+no implicit broadcast. `orders + 5` and `orders + otherArray` are both
+a `TypeError`; the only way to combine two arrays is `FLATTEN`. And
+inside any of the functions below, asking for a field a record doesn't
+have resolves to `null` (not an error) — e.g. `SUMIF(orders, "status",
+"shipped", "a_field_that_doesnt_exist")` returns `0`, the same way a
+missing top-level data field behaves in an arithmetic context.
+
 #### SUMIF / COUNTIF
 
 `SUMIF(array, conditionField, conditionValue, sumField)` sums

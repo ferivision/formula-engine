@@ -101,6 +101,19 @@
   not-found treatment. Completes Phase 5 -- all planned array/
   aggregate/lookup functions are now implemented (closes #71).
 
+#### Phase 6 — Type Coercion Extension
+
+- Confirmed (no production change needed): `Array + scalar` and
+  `Array + Array` in an arithmetic context already correctly hit
+  `coerceForArithmetic`'s existing catch-all `TypeError` -- Arrays
+  were never a case that type switch recognized, so there was never
+  an implicit-broadcast path to begin with. Accessing a non-existent
+  Record key already resolves to `null` (Go's zero-value map read),
+  which every aggregate/lookup function already treats correctly
+  (e.g. `SUMIF` sums it as `0`). Locked in with new tests -- both at
+  the coercion level and through the real public `Evaluate()` -- and
+  documented in README rather than left implicit (closes #72).
+
 ## [1.0.0] - 2026-08-11
 
 First release: the complete core engine, rfc.md §15 Phases 1-15.
