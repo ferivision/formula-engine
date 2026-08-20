@@ -17,16 +17,12 @@ func newTypeError(message string) error {
 	return &apperror.FormulaError{Code: apperror.ErrTypeMismatch, Message: message}
 }
 
-// newNotFoundError is the interim code for a missing lookup key.
-// rfc.md §10 defines a dedicated ErrLookupNotFound, but scopes adding
-// it to internal/apperror/errors.go under Phase 7 -- not this ticket
-// (F2-FASE-5.1). ErrRuntime is already formula-level, which is the
-// property that actually matters here (PRD use case 5: a missing key
-// must not block unrelated formulas); Phase 7 migrates this to the
-// dedicated code.
+// newNotFoundError reports a missing lookup key. rfc.md §10: the
+// dedicated ErrLookupNotFound, formula-level like the interim
+// ErrRuntime it replaced (F2-FASE-7.1 migration).
 func newNotFoundError(name string, key registry.Value) error {
 	return &apperror.FormulaError{
-		Code:    apperror.ErrRuntime,
+		Code:    apperror.ErrLookupNotFound,
 		Message: fmt.Sprintf("%s: key %v not found", name, key),
 	}
 }

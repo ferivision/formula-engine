@@ -63,13 +63,13 @@ func TestCheckArgCount_TooFew(t *testing.T) {
 	}
 }
 
-// Interim code per this ticket's note -- Phase 7 migrates this to the
-// dedicated ErrLookupNotFound once it exists. Must stay formula-level
-// (never call-level), which apperror.ErrRuntime already is.
+// rfc.md §10: a missing lookup key is the dedicated ErrLookupNotFound,
+// not the interim ErrRuntime used before Phase 7 (F2-FASE-7.1). Must
+// stay formula-level, which ErrLookupNotFound already is.
 func TestNewNotFoundError_IsFormulaLevel(t *testing.T) {
 	err := newNotFoundError("F", "missing-key")
 	var fe *apperror.FormulaError
-	if !errors.As(err, &fe) || fe.Code != apperror.ErrRuntime {
-		t.Errorf("newNotFoundError() = %v, want ErrRuntime (interim for ErrLookupNotFound)", err)
+	if !errors.As(err, &fe) || fe.Code != apperror.ErrLookupNotFound {
+		t.Errorf("newNotFoundError() = %v, want ErrLookupNotFound", err)
 	}
 }

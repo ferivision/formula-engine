@@ -116,8 +116,8 @@ func TestNewArray_MixedRecordAndScalarErrors(t *testing.T) {
 		t.Fatal("NewArray() error = nil, want type error for mixed Record/scalar array")
 	}
 	var fe *apperror.FormulaError
-	if !errors.As(err, &fe) || fe.Code != apperror.ErrTypeMismatch {
-		t.Errorf("error = %v, want ErrTypeMismatch", err)
+	if !errors.As(err, &fe) || fe.Code != apperror.ErrArrayTypeMismatch {
+		t.Errorf("error = %v, want ErrArrayTypeMismatch", err)
 	}
 }
 

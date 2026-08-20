@@ -126,6 +126,21 @@
   documented anywhere; added to README. Completes Phase 6 (closes
   #73).
 
+#### Phase 7 — Error Model Extensions
+
+- Added dedicated error codes `ErrLookupNotFound`
+  (`lookup_key_not_found`) and `ErrArrayTypeMismatch`
+  (`array_type_mismatch`) per rfc.md §10, replacing the interim codes
+  used ahead of schedule while those functions were first built:
+  `VLOOKUP`/`MATCH`/`FIND`'s not-found error moves from the interim
+  `ErrRuntime` (#70) to `ErrLookupNotFound`; malformed (mixed-type)
+  Array construction moves from the interim `ErrTypeMismatch` (#62)
+  to `ErrArrayTypeMismatch`. Both remain formula-level, confirmed by
+  an explicit test that an unrelated sibling formula in the same
+  `Evaluate` call still succeeds. `INDEX`'s out-of-range error stays
+  `ErrRuntime` as rfc.md §4 specifies -- not part of this migration
+  (closes #74).
+
 ## [1.0.0] - 2026-08-11
 
 First release: the complete core engine, rfc.md §15 Phases 1-15.
