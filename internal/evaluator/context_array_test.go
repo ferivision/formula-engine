@@ -79,8 +79,8 @@ func TestContext_Lookup_SurfacesArrayConstructionError(t *testing.T) {
 		t.Fatal("Lookup() error = nil, want a construction error for mixed-type array")
 	}
 	var fe *apperror.FormulaError
-	if !errors.As(err, &fe) || fe.Code != apperror.ErrTypeMismatch {
-		t.Errorf("error = %v, want ErrTypeMismatch", err)
+	if !errors.As(err, &fe) || fe.Code != apperror.ErrArrayTypeMismatch {
+		t.Errorf("error = %v, want ErrArrayTypeMismatch", err)
 	}
 }
 
@@ -133,8 +133,8 @@ func TestEvaluate_MixedArrayFieldIsTypeErrorNotUndefinedReference(t *testing.T) 
 		t.Fatal("Evaluate() error = nil, want a type-mismatch error")
 	}
 	var fe *apperror.FormulaError
-	if !errors.As(err, &fe) || fe.Code != apperror.ErrTypeMismatch {
-		t.Errorf("error = %v, want ErrTypeMismatch (not ErrUndefinedReference)", err)
+	if !errors.As(err, &fe) || fe.Code != apperror.ErrArrayTypeMismatch {
+		t.Errorf("error = %v, want ErrArrayTypeMismatch (not ErrUndefinedReference)", err)
 	}
 }
 

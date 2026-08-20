@@ -65,7 +65,7 @@ func newArrayFromAnySlice(s []any) (Array, error) {
 	}
 
 	if hasRecord && hasScalar {
-		return Array{}, newTypeError("array mixes records and scalar values")
+		return Array{}, newArrayTypeMismatchError("array mixes records and scalar values")
 	}
 
 	return Array{Elements: elements, IsRecord: hasRecord}, nil

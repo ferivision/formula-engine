@@ -10,6 +10,8 @@ const (
 	ErrUndefinedReference ErrorCode = "undefined_reference"
 	ErrTypeMismatch       ErrorCode = "type_mismatch"
 	ErrRuntime            ErrorCode = "runtime_error"
+	ErrLookupNotFound     ErrorCode = "lookup_key_not_found"
+	ErrArrayTypeMismatch  ErrorCode = "array_type_mismatch"
 )
 
 type FormulaError struct {
