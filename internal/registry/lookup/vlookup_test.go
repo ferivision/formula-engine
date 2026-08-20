@@ -75,6 +75,13 @@ func TestVlookup_ScalarArrayErrors(t *testing.T) {
 	}
 }
 
+func TestVlookup_EmptyTableErrors(t *testing.T) {
+	empty := mustArray(t, []map[string]any{})
+	if _, err := (vlookupFunction{}).Evaluate([]registry.Value{"A1", empty, "sku", "price"}); err == nil {
+		t.Fatal("Evaluate() error = nil, want not-found error for an empty table")
+	}
+}
+
 func TestVlookup_WrongArgCount(t *testing.T) {
 	table := mustArray(t, []map[string]any{{"sku": "A1"}})
 	if _, err := (vlookupFunction{}).Evaluate([]registry.Value{"A1", table, "sku"}); err == nil {

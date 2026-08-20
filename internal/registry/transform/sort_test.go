@@ -129,6 +129,46 @@ func TestSort_WrongArgCount(t *testing.T) {
 	}
 }
 
+func TestSort_EmptyArrayReturnsEmptyArray(t *testing.T) {
+	empty := mustArray(t, []map[string]any{})
+	got, err := (sortFunction{}).Evaluate([]registry.Value{empty, "qty", "asc"})
+	if err != nil {
+		t.Fatalf("Evaluate() error = %v", err)
+	}
+	if len(got.(evaluator.Array).Elements) != 0 {
+		t.Errorf("len(Elements) = %d, want 0", len(got.(evaluator.Array).Elements))
+	}
+}
+
+// rfc.md §9: SORT reorders, it doesn't filter -- a null element stays
+// in the result (unlike FILTER/aggregates, which exclude it), sorting
+// as if its key were the arithmetic-context zero value.
+func TestSort_NullElementStaysInResultSortedAsZero(t *testing.T) {
+	orders := mustArray(t, []any{
+		map[string]any{"sku": "positive", "qty": 5.0},
+		nil,
+		map[string]any{"sku": "negative", "qty": -5.0},
+	})
+
+	got, err := (sortFunction{}).Evaluate([]registry.Value{orders, "qty", "asc"})
+	if err != nil {
+		t.Fatalf("Evaluate() error = %v", err)
+	}
+	arr := got.(evaluator.Array)
+	if len(arr.Elements) != 3 {
+		t.Fatalf("len(Elements) = %d, want 3 (null element preserved, not dropped)", len(arr.Elements))
+	}
+	if arr.Elements[0].(evaluator.Record)["sku"] != "negative" {
+		t.Errorf("Elements[0] = %v, want the qty=-5 record first", arr.Elements[0])
+	}
+	if arr.Elements[1] != nil {
+		t.Errorf("Elements[1] = %v, want nil sorted between -5 and 5 (as key 0)", arr.Elements[1])
+	}
+	if arr.Elements[2].(evaluator.Record)["sku"] != "positive" {
+		t.Errorf("Elements[2] = %v, want the qty=5 record last", arr.Elements[2])
+	}
+}
+
 // Static guard, in addition to the behavioral stability test above:
 // this file must never call the non-stable sort.Slice.
 func TestSort_SourceNeverUsesUnstableSort(t *testing.T) {

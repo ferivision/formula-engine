@@ -88,6 +88,31 @@ func TestFlatten_MixingRecordAndScalarSubArraysErrors(t *testing.T) {
 	}
 }
 
+// rfc.md §9: a null slot in the outer array contributes nothing to
+// the flattened result, rather than erroring as "not an array".
+func TestFlatten_NullElementInOuterArraySkipped(t *testing.T) {
+	groups := mustArray(t, []any{
+		[]any{1.0, 2.0},
+		nil,
+		[]any{3.0},
+	})
+
+	got, err := (flattenFunction{}).Evaluate([]registry.Value{groups})
+	if err != nil {
+		t.Fatalf("Evaluate() error = %v", err)
+	}
+	arr := got.(evaluator.Array)
+	want := []evaluator.Value{1.0, 2.0, 3.0}
+	if len(arr.Elements) != len(want) {
+		t.Fatalf("Elements = %v, want %v (null sub-array slot contributes nothing)", arr.Elements, want)
+	}
+	for i := range want {
+		if arr.Elements[i] != want[i] {
+			t.Errorf("Elements[%d] = %v, want %v", i, arr.Elements[i], want[i])
+		}
+	}
+}
+
 func TestFlatten_NonArrayElementErrors(t *testing.T) {
 	groups := mustArray(t, []any{5.0})
 	if _, err := (flattenFunction{}).Evaluate([]registry.Value{groups}); err == nil {

@@ -511,6 +511,10 @@ formulaengine.FormulaInput{Expression: `SORT(orders, "qty", "asc")`}
 // result: orders ordered by qty ascending, ties broken by original order
 ```
 
+Unlike every other array function on this page, `SORT` **keeps** a
+`nil` element in its result instead of dropping it — sorting reorders,
+it doesn't filter. A `nil` element's sort key is treated as `0`.
+
 #### FLATTEN
 
 `FLATTEN(arrayOfArrays)` concatenates an array of nested arrays into

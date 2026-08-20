@@ -86,6 +86,28 @@ func TestFilter_DoesNotMutateInputArray(t *testing.T) {
 	}
 }
 
+// rfc.md §9: a null element can't be meaningfully matched against a
+// condition, so it's excluded from the result rather than erroring.
+func TestFilter_NullElementExcludedFromResult(t *testing.T) {
+	orders := mustArray(t, []any{
+		map[string]any{"status": "shipped"},
+		nil,
+		map[string]any{"status": "pending"},
+	})
+
+	got, err := (filterFunction{}).Evaluate([]registry.Value{orders, "status", "shipped"})
+	if err != nil {
+		t.Fatalf("Evaluate() error = %v", err)
+	}
+	arr := got.(evaluator.Array)
+	if len(arr.Elements) != 1 {
+		t.Fatalf("len(Elements) = %d, want 1 (null element excluded, doesn't error)", len(arr.Elements))
+	}
+	if arr.Elements[0].(evaluator.Record)["status"] != "shipped" {
+		t.Errorf("Elements[0] = %v, want the shipped record", arr.Elements[0])
+	}
+}
+
 func TestFilter_ScalarArrayErrors(t *testing.T) {
 	nums := mustArray(t, []any{1.0, 2.0})
 	if _, err := (filterFunction{}).Evaluate([]registry.Value{nums, "status", "shipped"}); err == nil {
