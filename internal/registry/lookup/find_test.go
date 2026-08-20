@@ -66,6 +66,13 @@ func TestFind_ScalarArrayErrors(t *testing.T) {
 	}
 }
 
+func TestFind_EmptyArrayErrors(t *testing.T) {
+	empty := mustArray(t, []map[string]any{})
+	if _, err := (findFunction{}).Evaluate([]registry.Value{empty, "status", "shipped"}); err == nil {
+		t.Fatal("Evaluate() error = nil, want not-found error for an empty array")
+	}
+}
+
 func TestFind_WrongArgCount(t *testing.T) {
 	orders := mustArray(t, []map[string]any{{"status": "shipped"}})
 	if _, err := (findFunction{}).Evaluate([]registry.Value{orders, "status"}); err == nil {

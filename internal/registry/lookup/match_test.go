@@ -64,6 +64,13 @@ func TestMatch_ScalarArrayErrors(t *testing.T) {
 	}
 }
 
+func TestMatch_EmptyArrayErrors(t *testing.T) {
+	empty := mustArray(t, []map[string]any{})
+	if _, err := (matchFunction{}).Evaluate([]registry.Value{"A1", empty, "sku"}); err == nil {
+		t.Fatal("Evaluate() error = nil, want not-found error for an empty array")
+	}
+}
+
 func TestMatch_WrongArgCount(t *testing.T) {
 	arr := mustArray(t, []map[string]any{{"sku": "A1"}})
 	if _, err := (matchFunction{}).Evaluate([]registry.Value{"A1", arr}); err == nil {

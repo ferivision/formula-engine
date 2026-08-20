@@ -69,6 +69,13 @@ func TestIndex_NonArrayFirstArgErrors(t *testing.T) {
 	}
 }
 
+func TestIndex_EmptyArrayAnyPositionErrors(t *testing.T) {
+	empty := mustArray(t, []any{})
+	if _, err := (indexFunction{}).Evaluate([]registry.Value{empty, 1.0}); err == nil {
+		t.Fatal("Evaluate() error = nil, want out-of-range error for an empty array")
+	}
+}
+
 func TestIndex_WrongArgCount(t *testing.T) {
 	nums := mustArray(t, []any{1.0})
 	if _, err := (indexFunction{}).Evaluate([]registry.Value{nums}); err == nil {

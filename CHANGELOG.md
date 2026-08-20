@@ -113,6 +113,18 @@
   (e.g. `SUMIF` sums it as `0`). Locked in with new tests -- both at
   the coercion level and through the real public `Evaluate()` -- and
   documented in README rather than left implicit (closes #72).
+- Audited every Phase 3-5 function (`SUMIF` through `FIND`) against
+  rfc.md §9's empty-array and null-element rows -- a pure
+  test-coverage audit; no bugs found, no production code changed.
+  Filled real gaps in explicit coverage: `FILTER`/`UNIQUE` excluding
+  null elements from their result, `FLATTEN` treating a null
+  sub-array slot as contributing nothing, `INDEX`/`VLOOKUP`/`MATCH`/
+  `FIND` correctly erroring on an empty array, and `SORT`'s
+  genuinely different behavior -- it **keeps** a null element
+  (sorted as key `0`) rather than excluding it, since sorting
+  reorders rather than filters. That last distinction wasn't
+  documented anywhere; added to README. Completes Phase 6 (closes
+  #73).
 
 ## [1.0.0] - 2026-08-11
 

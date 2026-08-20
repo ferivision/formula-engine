@@ -93,6 +93,36 @@ func TestUnique_DoesNotMutateInputArray(t *testing.T) {
 	}
 }
 
+// rfc.md §9: a null element is skipped, not treated as a distinct
+// "unique" value in its own right.
+func TestUnique_NullElementSkippedForScalars(t *testing.T) {
+	nums := mustArray(t, []any{1.0, nil, 2.0, nil})
+	got, err := (uniqueFunction{}).Evaluate([]registry.Value{nums})
+	if err != nil {
+		t.Fatalf("Evaluate() error = %v", err)
+	}
+	arr := got.(evaluator.Array)
+	if len(arr.Elements) != 2 || arr.Elements[0] != 1.0 || arr.Elements[1] != 2.0 {
+		t.Errorf("Elements = %v, want [1 2] (nulls skipped)", arr.Elements)
+	}
+}
+
+func TestUnique_NullElementSkippedForRecords(t *testing.T) {
+	orders := mustArray(t, []any{
+		map[string]any{"sku": "A1"},
+		nil,
+		map[string]any{"sku": "B2"},
+	})
+	got, err := (uniqueFunction{}).Evaluate([]registry.Value{orders, "sku"})
+	if err != nil {
+		t.Fatalf("Evaluate() error = %v", err)
+	}
+	arr := got.(evaluator.Array)
+	if len(arr.Elements) != 2 {
+		t.Errorf("len(Elements) = %d, want 2 (null skipped)", len(arr.Elements))
+	}
+}
+
 func TestUnique_WrongArgCount(t *testing.T) {
 	nums := mustArray(t, []any{1.0})
 	if _, err := (uniqueFunction{}).Evaluate([]registry.Value{nums, "a", "b"}); err == nil {
