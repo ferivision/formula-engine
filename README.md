@@ -639,14 +639,21 @@ question on this) and no fix has been made yet — if you're chaining
 more than a few hundred formulas in one call, benchmark your own
 workload rather than assuming linear scaling.
 
+A single call against a large Array (`SUMIF`, `SORT`, `VLOOKUP`) scales
+much better: at 10,000 elements, `SUMIF` and `VLOOKUP` (both O(n))
+take roughly 200-260 µs, and `SORT` (O(n log n) via
+`sort.SliceStable`) takes roughly 4.4 ms. See `CHANGELOG.md`'s Phase 8
+(feature-0002) entry for the full table across 10/100/1,000/10,000
+elements. As with chained formulas, no performance budget is set here
+either — benchmark your own Array sizes if performance matters for
+your workload.
+
 ## Not yet supported
 
 - **Unary minus.** `ABS(-5)` and `-price` are not valid syntax yet —
   write `0 - 5` / `0 - price` instead. Negative number literals will
   be added in a future ticket.
 
-All planned array/aggregate/lookup functions are now implemented. See
-[feature-0002's rfc.md §14](docs/features/0002-array-aggregate-lookup-function/feature-0002-rfc.md)
-for what's still ahead (type-coercion hardening, full error-model/
-integration tests, benchmarks), or the repo's open issues for what's
-in progress right now.
+All planned array/aggregate/lookup functions (feature-0002) are now
+implemented, including type coercion, the full error model, and
+benchmarks. See the repo's open issues for what's in progress next.
