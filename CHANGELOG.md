@@ -147,6 +147,36 @@
   code changed; all six passed against the existing implementation
   (closes #75).
 
+#### Phase 8 — Benchmarks
+
+- Added a benchmark suite at 10/100/1,000/10,000-element Arrays, one
+  representative function per category (rfc.md §14): `SUMIF`
+  (conditional aggregate, O(n) scan), `SORT` (transformation, O(n log
+  n) via `sort.SliceStable`), `VLOOKUP` (lookup, worst-case O(n) scan
+  -- the key is always the last element). Feeds PRD §8's "execution
+  time per call at representative Array sizes" metric (no target is
+  set here, per NFR-4 -- measurement only, no optimization performed).
+  Measured on the CI container (arm64, `golang:1.25-bookworm`):
+
+  | Array size | SUMIF | SORT | VLOOKUP |
+  |---|---|---|---|
+  | 10 | 2.58 µs / 3.5 KB / 49 allocs | 3.62 µs / 3.4 KB / 44 allocs | 2.29 µs / 3.4 KB / 47 allocs |
+  | 100 | 3.99 µs / 5.1 KB / 49 allocs | 39.3 µs / 6.5 KB / 44 allocs | 3.44 µs / 5.0 KB / 47 allocs |
+  | 1,000 | 22.2 µs / 19.3 KB / 49 allocs | 403 µs / 35.0 KB / 44 allocs | 17.9 µs / 19.2 KB / 47 allocs |
+  | 10,000 | 257 µs / 163.3 KB / 49 allocs | 4.37 ms / 322.9 KB / 44 allocs | 204 µs / 163.2 KB / 47 allocs |
+
+  `SUMIF`/`VLOOKUP` grow sub-linearly at small sizes (a roughly
+  constant ~2.3 µs per-call overhead, consistent with feature-0001's
+  single-formula baseline, dominates until the O(n) scan cost
+  overtakes it), then close to linearly by 10,000. `SORT` scales by
+  close to 10x for every 10x growth in size across the whole range --
+  consistent with O(n log n), since log(n)'s growth is small relative
+  to n at these sizes. Allocs/op stays flat across all four sizes for
+  every function: `Array` construction is one slice allocation sized
+  to the input, not one allocation per element, so allocation *count*
+  doesn't scale with n even though total bytes do. Completes Phase 8
+  and feature-0002 (closes #76).
+
 ## [1.0.0] - 2026-08-11
 
 First release: the complete core engine, rfc.md §15 Phases 1-15.
