@@ -140,6 +140,12 @@
   `Evaluate` call still succeeds. `INDEX`'s out-of-range error stays
   `ErrRuntime` as rfc.md §4 specifies -- not part of this migration
   (closes #74).
+- Added black-box acceptance tests for each of prd.md §5's six use
+  cases (conditional sum, filter-then-count, deduplicate, reference
+  lookup, missing-key lookup, empty-array input), exercised only
+  through the public `Evaluate()` API. Confirmatory -- no production
+  code changed; all six passed against the existing implementation
+  (closes #75).
 
 ## [1.0.0] - 2026-08-11
 
