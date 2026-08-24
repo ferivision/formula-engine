@@ -177,6 +177,19 @@
   doesn't scale with n even though total bytes do. Completes Phase 8
   and feature-0002 (closes #76).
 
+### Dev Tools
+
+- Added `cmd/testserver`, a local HTTP wrapper around the public
+  `Evaluate()` function for manual formula testing without writing a
+  Go test file each time. Not a library feature -- no PRD/RFC, per
+  `CLAUDE.md`'s network-layer guardrail, which applies to the
+  `formulaengine` package staying stateless, not to a separate `cmd/`
+  dev tool. One endpoint, `POST /evaluate`; a formula-level error
+  (e.g. division by zero) surfaces in that formula's own `error`
+  field with HTTP 200, a call-level error (e.g. a circular reference)
+  as a top-level error with HTTP 422, and a malformed request body as
+  HTTP 400. See `cmd/testserver/README.md` for usage (closes #91).
+
 ## [1.0.0] - 2026-08-11
 
 First release: the complete core engine, rfc.md §15 Phases 1-15.
