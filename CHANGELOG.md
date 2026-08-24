@@ -204,6 +204,11 @@
   (running as root) have mismatched ownership -- a Docker/git
   interaction that doesn't reproduce locally, not a code bug (closes
   #93).
+- Extended `.github/workflows/ci.yml` to also trigger on push and PRs
+  to `main`, alongside `develop` -- an automated backstop for `main`'s
+  release-only status, on top of (not instead of) the manual `make
+  test && make test-race` step CLAUDE.md already requires before
+  tagging a release (closes #96).
 
 ## [1.0.0] - 2026-08-11
 
