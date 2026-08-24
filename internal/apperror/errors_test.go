@@ -32,6 +32,8 @@ func TestFormulaError_CodeConstants(t *testing.T) {
 		{ErrUndefinedReference, "undefined_reference"},
 		{ErrTypeMismatch, "type_mismatch"},
 		{ErrRuntime, "runtime_error"},
+		{ErrLookupNotFound, "lookup_key_not_found"},
+		{ErrArrayTypeMismatch, "array_type_mismatch"},
 	}
 
 	for _, tt := range tests {

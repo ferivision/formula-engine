@@ -394,6 +394,193 @@ formulaengine.FormulaInput{Expression: "BETWEEN(10, 1, 10)"}
 // result: true -- 10 is the upper bound itself, and BETWEEN includes it
 ```
 
+### Arrays
+
+Arrays are a new value type on top of the scalars above: an ordered
+list of either **records** (`[]map[string]any`, or a `[]any` where
+every element is a `map[string]any` — e.g. what `json.Unmarshal`
+produces for a JSON array of objects) or plain scalars (`[]any` of
+numbers/strings/bools). Pass one in via the data map; there's no array
+literal syntax in formulas themselves.
+
+```go
+formulaengine.Evaluate(
+	[]formulaengine.FormulaInput{{Name: "result", Expression: `SUMIF(orders, "status", "shipped", "qty")`}},
+	map[string]any{
+		"orders": []map[string]any{
+			{"status": "shipped", "qty": 5.0},
+			{"status": "pending", "qty": 2.0},
+			{"status": "shipped", "qty": 3.0},
+		},
+	},
+)
+// result: 8
+```
+
+A `nil` element in the array (a blank slot) is skipped by aggregate
+functions, not counted or summed. Mixing records and scalars in the
+same array is a `TypeError` as soon as the array is looked up, not
+deferred until a function tries to use it.
+
+An array doesn't participate in plain arithmetic operators — there's
+no implicit broadcast. `orders + 5` and `orders + otherArray` are both
+a `TypeError`; the only way to combine two arrays is `FLATTEN`. And
+inside any of the functions below, asking for a field a record doesn't
+have resolves to `null` (not an error) — e.g. `SUMIF(orders, "status",
+"shipped", "a_field_that_doesnt_exist")` returns `0`, the same way a
+missing top-level data field behaves in an arithmetic context.
+
+#### SUMIF / COUNTIF
+
+`SUMIF(array, conditionField, conditionValue, sumField)` sums
+`sumField` across records where `conditionField` equals
+`conditionValue`. `COUNTIF(array, conditionField, conditionValue)`
+counts matching records instead of summing. Both require an array of
+records (not scalars); an **empty** array returns `0` for both, not
+an error.
+
+```go
+formulaengine.FormulaInput{Expression: `SUMIF(orders, "status", "shipped", "qty")`}
+// result: 8 (5 + 3, the two "shipped" orders' qty)
+
+formulaengine.FormulaInput{Expression: `COUNTIF(orders, "status", "shipped")`}
+// result: 2
+```
+
+#### AVERAGEIF / MINIF / MAXIF
+
+Same shape as `SUMIF`: `AVERAGEIF(array, conditionField, conditionValue,
+avgField)`, `MINIF(..., minField)`, `MAXIF(..., maxField)`. **Unlike**
+`SUMIF`/`COUNTIF`, an empty array — or an array with zero matching
+records — is a formula-level `TypeError` for all three, not `0`:
+averaging, min, or max over nothing is undefined, so there's no
+sensible zero-value result to return instead.
+
+```go
+formulaengine.FormulaInput{Expression: `AVERAGEIF(orders, "status", "shipped", "qty")`}
+// result: 5 -- average of the two "shipped" orders' qty (4 and 6)
+
+formulaengine.FormulaInput{Expression: `MINIF(orders, "status", "shipped", "qty")`}
+// result: 4
+
+formulaengine.FormulaInput{Expression: `MAXIF(orders, "status", "shipped", "qty")`}
+// result: 6
+```
+
+#### FILTER
+
+`FILTER(array, conditionField, conditionValue)` returns a **new**
+array containing only the records where `conditionField` equals
+`conditionValue` — the input array is never modified. A `nil` element
+can't be meaningfully matched against a condition, so it's silently
+excluded from the result rather than causing an error.
+
+```go
+formulaengine.FormulaInput{Expression: `FILTER(orders, "status", "shipped")`}
+// result: an Array of just the "shipped" records
+```
+
+#### UNIQUE
+
+`UNIQUE(array)` deduplicates a **scalar** array by direct value
+equality, preserving first-seen order — `1` (number) and `"1"`
+(string) are treated as different values here, unlike `FILTER`'s
+condition matching, which does coerce across types. `UNIQUE(array,
+field)` instead deduplicates a **record** array by a field's value,
+keeping the first record seen for each distinct value.
+
+```go
+formulaengine.FormulaInput{Expression: "UNIQUE(nums)"}
+// data: map[string]any{"nums": []any{1.0, 2.0, 1.0, 3.0}}
+// result: an Array of [1, 2, 3]
+
+formulaengine.FormulaInput{Expression: `UNIQUE(orders, "sku")`}
+// result: an Array with one record per distinct "sku", first-seen order
+```
+
+#### SORT
+
+`SORT(array, sortField, direction)` returns a **new**, sorted array —
+`direction` must be `"asc"` or `"desc"`, anything else is a formula-
+level error. Uses Go's `sort.SliceStable` internally, so records
+sharing an equal sort key keep their original relative order rather
+than being reshuffled arbitrarily.
+
+```go
+formulaengine.FormulaInput{Expression: `SORT(orders, "qty", "asc")`}
+// result: orders ordered by qty ascending, ties broken by original order
+```
+
+Unlike every other array function on this page, `SORT` **keeps** a
+`nil` element in its result instead of dropping it — sorting reorders,
+it doesn't filter. A `nil` element's sort key is treated as `0`.
+
+#### FLATTEN
+
+`FLATTEN(arrayOfArrays)` concatenates an array of nested arrays into
+one flat array — the one place nested arrays are allowed in this
+library, since it's consuming pre-existing nesting (e.g. from a
+consumer that passed `[]any{[]any{...}, []any{...}}`) rather than
+producing or navigating it elsewhere.
+
+```go
+formulaengine.FormulaInput{Expression: "FLATTEN(groups)"}
+// data: map[string]any{"groups": []any{[]any{1.0, 2.0}, []any{3.0, 4.0}}}
+// result: an Array of [1, 2, 3, 4]
+```
+
+A concretely-typed Go `[][]any` isn't recognized here (or anywhere
+`NewArray` converts data) — wrap nested slices as `[]any{...}` instead.
+
+#### VLOOKUP
+
+`VLOOKUP(key, table, keyField, returnField)` finds the first record in
+`table` where `keyField` equals `key`, and returns that record's
+`returnField` value. A key that isn't found is a **formula-level**
+error — it doesn't block an unrelated formula in the same `Evaluate`
+call.
+
+```go
+formulaengine.FormulaInput{Expression: `VLOOKUP("B2", prices, "sku", "price")`}
+// result: 20
+```
+
+#### MATCH
+
+`MATCH(key, array, field)` returns the 1-based position of the first
+record where `field` equals `key` — same not-found treatment as
+`VLOOKUP`.
+
+```go
+formulaengine.FormulaInput{Expression: `MATCH("B2", prices, "sku")`}
+// result: 2
+```
+
+#### INDEX
+
+`INDEX(array, position)` returns the element at a 1-based `position`
+— works on either a scalar or a record array, unlike the rest of this
+category which needs records for field access. An out-of-range
+`position` (including `0` or negative) is a formula-level error.
+
+```go
+formulaengine.FormulaInput{Expression: "INDEX(orders, 2)"}
+// result: the second record in orders
+```
+
+#### FIND
+
+`FIND(array, conditionField, conditionValue)` returns the first whole
+record where `conditionField` equals `conditionValue` — same
+not-found treatment as `VLOOKUP`/`MATCH`. Unlike `VLOOKUP`, which
+returns one named field, `FIND` gives back the entire matching
+record.
+
+```go
+formulaengine.FormulaInput{Expression: `FIND(orders, "status", "shipped")`}
+// result: the first record whose status is "shipped"
+```
+
 ### Error handling
 
 | Situation | Where it shows up |
@@ -452,14 +639,21 @@ question on this) and no fix has been made yet — if you're chaining
 more than a few hundred formulas in one call, benchmark your own
 workload rather than assuming linear scaling.
 
+A single call against a large Array (`SUMIF`, `SORT`, `VLOOKUP`) scales
+much better: at 10,000 elements, `SUMIF` and `VLOOKUP` (both O(n))
+take roughly 200-260 µs, and `SORT` (O(n log n) via
+`sort.SliceStable`) takes roughly 4.4 ms. See `CHANGELOG.md`'s Phase 8
+(feature-0002) entry for the full table across 10/100/1,000/10,000
+elements. As with chained formulas, no performance budget is set here
+either — benchmark your own Array sizes if performance matters for
+your workload.
+
 ## Not yet supported
 
 - **Unary minus.** `ABS(-5)` and `-price` are not valid syntax yet —
   write `0 - 5` / `0 - price` instead. Negative number literals will
   be added in a future ticket.
 
-All planned Phase 1-12 built-in functions are now implemented. See
-[`rfc.md` §15](docs/features/0001-core-engine/rfc.md) for what's
-still ahead (type-coercion hardening, full partial-success error
-semantics, concurrency/benchmark verification), or the repo's open
-issues for what's in progress right now.
+All planned array/aggregate/lookup functions (feature-0002) are now
+implemented, including type coercion, the full error model, and
+benchmarks. See the repo's open issues for what's in progress next.

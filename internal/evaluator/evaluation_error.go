@@ -10,6 +10,10 @@ func newTypeError(message string) error {
 	return &apperror.FormulaError{Code: apperror.ErrTypeMismatch, Message: message}
 }
 
+func newArrayTypeMismatchError(message string) error {
+	return &apperror.FormulaError{Code: apperror.ErrArrayTypeMismatch, Message: message}
+}
+
 func newUndefinedReferenceError(name string) error {
 	return &apperror.FormulaError{
 		Code:    apperror.ErrUndefinedReference,

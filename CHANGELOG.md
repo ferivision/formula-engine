@@ -2,6 +2,221 @@
 
 ## Unreleased
 
+## [1.1.0] - 2026-08-24
+
+Adds feature-0002 (Array, Aggregate & Lookup Functions) in full,
+plus repo-level dev tooling (a local HTTP test wrapper and CI).
+Backwards-compatible with v1.0.0 -- no public API removed or changed,
+only new functions and error codes added.
+
+### Feature 0002 — Array, Aggregate & Lookup Functions
+
+#### Phase 1 — Array & Record Value Types
+
+- Added `internal/evaluator/value.go`: the `Array`/`Record` value
+  types from rfc.md (0002) §2, plus `NewArray`, converting
+  `[]map[string]any` into a Record array and `[]any` into a scalar
+  array (empty slices convert into a valid empty `Array`, no error).
+  Internal-only — not yet reachable from the public API (that's
+  Phase 2's job) (closes #61).
+- Fixed a real gap while implementing mixed-type rejection: a `[]any`
+  where every element is `map[string]any` — exactly what
+  `json.Unmarshal` produces for a JSON array of objects, not
+  `[]map[string]any` — was being silently treated as a scalar array
+  instead of a Record array. `NewArray` now inspects `[]any` elements
+  to detect all-Record, all-scalar, or (rejected) mixed content. See
+  `docs/adr/0001-record-array-detection-via-element-inspection.md`
+  (closes #62). Phase 1 complete.
+
+#### Phase 2 — Evaluator Support for Array Identifiers
+
+- `Context.Lookup` now resolves a `[]map[string]any`/`[]any` data
+  value into an `Array` instead of passing the raw Go slice through
+  unconverted. A conversion failure falls through to the raw value
+  for now -- proper error propagation is the next ticket (closes
+  #64).
+- `Context.Lookup` now returns `(Value, error)` instead of
+  `(Value, bool)`: a malformed array (mixed-type `[]any`) surfaces its
+  construction error as soon as it's looked up, per rfc.md §9's "not
+  deferred to first use" -- replacing #64's temporary silent-fallback
+  behavior. A field genuinely absent from the data map is still
+  distinguished (via a sentinel `errFieldNotFound`) and still reports
+  `ErrUndefinedReference`, not the new `TypeError`. An identifier
+  resolving to an already-computed `Array` (e.g. a future `FILTER`
+  result) passes through unchanged. This is a real internal contract
+  change, documented as ADR 0002 (closes #65). Phase 2 complete.
+
+#### Phase 3 — Conditional Aggregates
+
+- Added `internal/registry/aggregate`: `SUMIF`, `COUNTIF` -- the
+  first functions to actually consume an `Array`. An empty array
+  returns `0` for both (not an error); a `nil` element is skipped, not
+  counted/summed; a scalar (non-record) array is a formula-level
+  `TypeError`. While implementing null-element handling, found and
+  fixed a real bug in `internal/evaluator/value.go`: a `nil` slot in
+  an otherwise-all-Records `[]any` was wrongly flagged as "mixed
+  types" (`nil` doesn't type-assert as `map[string]any`), which would
+  have made rfc.md §9's null-skipping rule impossible to satisfy for
+  a genuinely blank record slot. First feature-0002 work reachable
+  from the public API and documented in README (closes #66).
+- Added `AVERAGEIF`, `MINIF`, `MAXIF` -- same shape as `SUMIF`, reusing
+  #66's shared aggregate helpers. Deliberately different from
+  `SUMIF`/`COUNTIF`: an empty array *or* zero matching records is a
+  formula-level `TypeError` for all three, per rfc.md §9 -- average/
+  min/max of nothing is undefined, unlike sum/count which naturally
+  resolve to `0`. Null elements are still skipped. Completes Phase 3
+  (closes #67).
+
+#### Phase 4 — Transformations
+
+- Added `internal/registry/transform`: `FILTER`, `UNIQUE`. `FILTER`
+  returns a new array of matching records without mutating the input;
+  `UNIQUE(array)` dedupes a scalar array by direct value equality
+  (no numeric coercion, unlike condition matching), preserving
+  first-seen order (PRD use case 3); `UNIQUE(array, field)` dedupes a
+  record array by a field's value instead. Both return an empty array
+  for empty input, not an error. Verified no shared backing-array
+  mutation with explicit tests (closes #68).
+- Added `SORT`, `FLATTEN`. `SORT(array, sortField, direction)` uses
+  `sort.SliceStable` -- never `sort.Slice` -- verified both with a
+  behavioral test (elements sharing an equal sort key keep their
+  original relative order, per PRD NFR-3) and a static check on
+  `sort.go`'s source. `direction` must be `"asc"`/`"desc"`.
+  `FLATTEN(arrayOfArrays)` concatenates nested arrays -- the one
+  deliberate exception to "no nested arrays" (rfc.md §7) -- accepting
+  `[]any`/`[]map[string]any` sub-arrays; a concretely-typed `[][]any`
+  isn't recognized (documented as a known gap, not fixed here).
+  Completes Phase 4 (closes #69).
+
+#### Phase 5 — Lookup Functions
+
+- Added `internal/registry/lookup`: `VLOOKUP`, `MATCH`. A key not
+  found in the table is a formula-level error -- kept an interim
+  `ErrRuntime` for now (the dedicated `ErrLookupNotFound` code is
+  scoped to Phase 7, same sequencing gap as `ErrArrayTypeMismatch`
+  on #66), migrated later, but already correctly formula-level so it
+  doesn't block an unrelated formula in the same `Evaluate` call
+  (PRD use case 5, covered by an explicit integration test) (closes
+  #70).
+- Added `INDEX`, `FIND`. `INDEX(array, position)` works on either a
+  scalar or a record array (unlike the rest of this category, which
+  needs records) and returns a plain `ErrRuntime` for an out-of-range
+  1-based `position` -- rfc.md §4 explicitly says to reuse this
+  existing code rather than add a new one. `FIND(array,
+  conditionField, conditionValue)` returns the whole first matching
+  record (not a single field, unlike `VLOOKUP`), with the same
+  not-found treatment. Completes Phase 5 -- all planned array/
+  aggregate/lookup functions are now implemented (closes #71).
+
+#### Phase 6 — Type Coercion Extension
+
+- Confirmed (no production change needed): `Array + scalar` and
+  `Array + Array` in an arithmetic context already correctly hit
+  `coerceForArithmetic`'s existing catch-all `TypeError` -- Arrays
+  were never a case that type switch recognized, so there was never
+  an implicit-broadcast path to begin with. Accessing a non-existent
+  Record key already resolves to `null` (Go's zero-value map read),
+  which every aggregate/lookup function already treats correctly
+  (e.g. `SUMIF` sums it as `0`). Locked in with new tests -- both at
+  the coercion level and through the real public `Evaluate()` -- and
+  documented in README rather than left implicit (closes #72).
+- Audited every Phase 3-5 function (`SUMIF` through `FIND`) against
+  rfc.md §9's empty-array and null-element rows -- a pure
+  test-coverage audit; no bugs found, no production code changed.
+  Filled real gaps in explicit coverage: `FILTER`/`UNIQUE` excluding
+  null elements from their result, `FLATTEN` treating a null
+  sub-array slot as contributing nothing, `INDEX`/`VLOOKUP`/`MATCH`/
+  `FIND` correctly erroring on an empty array, and `SORT`'s
+  genuinely different behavior -- it **keeps** a null element
+  (sorted as key `0`) rather than excluding it, since sorting
+  reorders rather than filters. That last distinction wasn't
+  documented anywhere; added to README. Completes Phase 6 (closes
+  #73).
+
+#### Phase 7 — Error Model Extensions
+
+- Added dedicated error codes `ErrLookupNotFound`
+  (`lookup_key_not_found`) and `ErrArrayTypeMismatch`
+  (`array_type_mismatch`) per rfc.md §10, replacing the interim codes
+  used ahead of schedule while those functions were first built:
+  `VLOOKUP`/`MATCH`/`FIND`'s not-found error moves from the interim
+  `ErrRuntime` (#70) to `ErrLookupNotFound`; malformed (mixed-type)
+  Array construction moves from the interim `ErrTypeMismatch` (#62)
+  to `ErrArrayTypeMismatch`. Both remain formula-level, confirmed by
+  an explicit test that an unrelated sibling formula in the same
+  `Evaluate` call still succeeds. `INDEX`'s out-of-range error stays
+  `ErrRuntime` as rfc.md §4 specifies -- not part of this migration
+  (closes #74).
+- Added black-box acceptance tests for each of prd.md §5's six use
+  cases (conditional sum, filter-then-count, deduplicate, reference
+  lookup, missing-key lookup, empty-array input), exercised only
+  through the public `Evaluate()` API. Confirmatory -- no production
+  code changed; all six passed against the existing implementation
+  (closes #75).
+
+#### Phase 8 — Benchmarks
+
+- Added a benchmark suite at 10/100/1,000/10,000-element Arrays, one
+  representative function per category (rfc.md §14): `SUMIF`
+  (conditional aggregate, O(n) scan), `SORT` (transformation, O(n log
+  n) via `sort.SliceStable`), `VLOOKUP` (lookup, worst-case O(n) scan
+  -- the key is always the last element). Feeds PRD §8's "execution
+  time per call at representative Array sizes" metric (no target is
+  set here, per NFR-4 -- measurement only, no optimization performed).
+  Measured on the CI container (arm64, `golang:1.25-bookworm`):
+
+  | Array size | SUMIF | SORT | VLOOKUP |
+  |---|---|---|---|
+  | 10 | 2.58 µs / 3.5 KB / 49 allocs | 3.62 µs / 3.4 KB / 44 allocs | 2.29 µs / 3.4 KB / 47 allocs |
+  | 100 | 3.99 µs / 5.1 KB / 49 allocs | 39.3 µs / 6.5 KB / 44 allocs | 3.44 µs / 5.0 KB / 47 allocs |
+  | 1,000 | 22.2 µs / 19.3 KB / 49 allocs | 403 µs / 35.0 KB / 44 allocs | 17.9 µs / 19.2 KB / 47 allocs |
+  | 10,000 | 257 µs / 163.3 KB / 49 allocs | 4.37 ms / 322.9 KB / 44 allocs | 204 µs / 163.2 KB / 47 allocs |
+
+  `SUMIF`/`VLOOKUP` grow sub-linearly at small sizes (a roughly
+  constant ~2.3 µs per-call overhead, consistent with feature-0001's
+  single-formula baseline, dominates until the O(n) scan cost
+  overtakes it), then close to linearly by 10,000. `SORT` scales by
+  close to 10x for every 10x growth in size across the whole range --
+  consistent with O(n log n), since log(n)'s growth is small relative
+  to n at these sizes. Allocs/op stays flat across all four sizes for
+  every function: `Array` construction is one slice allocation sized
+  to the input, not one allocation per element, so allocation *count*
+  doesn't scale with n even though total bytes do. Completes Phase 8
+  and feature-0002 (closes #76).
+
+### Dev Tools
+
+- Added `cmd/testserver`, a local HTTP wrapper around the public
+  `Evaluate()` function for manual formula testing without writing a
+  Go test file each time. Not a library feature -- no PRD/RFC, per
+  `CLAUDE.md`'s network-layer guardrail, which applies to the
+  `formulaengine` package staying stateless, not to a separate `cmd/`
+  dev tool. One endpoint, `POST /evaluate`; a formula-level error
+  (e.g. division by zero) surfaces in that formula's own `error`
+  field with HTTP 200, a call-level error (e.g. a circular reference)
+  as a top-level error with HTTP 422, and a malformed request body as
+  HTTP 400. See `cmd/testserver/README.md` for usage (closes #91).
+- Added `.github/workflows/ci.yml`, running on push to `develop` and
+  PRs targeting `develop` -- required for AfterQuery's
+  repository-submission flow, which needs a connected codebase to
+  have CI configured. Runs `vet`, `fmt-check`, `build`, `test`, and
+  `test-race` via the existing `Makefile` targets, inside the same
+  pinned `golang:1.25-bookworm` container used locally. Added
+  `fmt-check` (a non-mutating sibling of `fmt`) since CI needs a
+  check that fails on unformatted code rather than silently fixing
+  and passing. Also added `-buildvcs=false` to the `test`/
+  `test-race`/`build` targets: `go build`/`go test` try to embed VCS
+  info via `git`, which fails on GitHub Actions because the
+  checked-out repo (owned by the runner user) and the container
+  (running as root) have mismatched ownership -- a Docker/git
+  interaction that doesn't reproduce locally, not a code bug (closes
+  #93).
+- Extended `.github/workflows/ci.yml` to also trigger on push and PRs
+  to `main`, alongside `develop` -- an automated backstop for `main`'s
+  release-only status, on top of (not instead of) the manual `make
+  test && make test-race` step CLAUDE.md already requires before
+  tagging a release (closes #96).
+
 ## [1.0.0] - 2026-08-11
 
 First release: the complete core engine, rfc.md §15 Phases 1-15.
