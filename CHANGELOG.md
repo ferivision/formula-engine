@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## [1.1.0] - 2026-08-24
+
+Adds feature-0002 (Array, Aggregate & Lookup Functions) in full,
+plus repo-level dev tooling (a local HTTP test wrapper and CI).
+Backwards-compatible with v1.0.0 -- no public API removed or changed,
+only new functions and error codes added.
+
 ### Feature 0002 — Array, Aggregate & Lookup Functions
 
 #### Phase 1 — Array & Record Value Types
