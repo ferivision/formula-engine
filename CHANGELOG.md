@@ -189,6 +189,21 @@
   field with HTTP 200, a call-level error (e.g. a circular reference)
   as a top-level error with HTTP 422, and a malformed request body as
   HTTP 400. See `cmd/testserver/README.md` for usage (closes #91).
+- Added `.github/workflows/ci.yml`, running on push to `develop` and
+  PRs targeting `develop` -- required for AfterQuery's
+  repository-submission flow, which needs a connected codebase to
+  have CI configured. Runs `vet`, `fmt-check`, `build`, `test`, and
+  `test-race` via the existing `Makefile` targets, inside the same
+  pinned `golang:1.25-bookworm` container used locally. Added
+  `fmt-check` (a non-mutating sibling of `fmt`) since CI needs a
+  check that fails on unformatted code rather than silently fixing
+  and passing. Also added `-buildvcs=false` to the `test`/
+  `test-race`/`build` targets: `go build`/`go test` try to embed VCS
+  info via `git`, which fails on GitHub Actions because the
+  checked-out repo (owned by the runner user) and the container
+  (running as root) have mismatched ownership -- a Docker/git
+  interaction that doesn't reproduce locally, not a code bug (closes
+  #93).
 
 ## [1.0.0] - 2026-08-11
 
