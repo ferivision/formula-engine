@@ -6,7 +6,7 @@
 GO_IMAGE := golang:1.25-bookworm
 DOCKER_RUN := docker run --rm -v "$(CURDIR):/app" -w /app $(GO_IMAGE)
 
-.PHONY: test test-race build tidy fmt vet shell
+.PHONY: test test-race build tidy fmt fmt-check vet shell
 
 test:
 	$(DOCKER_RUN) go test ./...
@@ -22,6 +22,11 @@ tidy:
 
 fmt:
 	$(DOCKER_RUN) gofmt -l -w .
+
+# Like fmt, but only reports -- never rewrites files. Used by CI, where
+# silently reformatting and passing anyway would hide the problem.
+fmt-check:
+	$(DOCKER_RUN) sh -c 'unformatted=$$(gofmt -l .); if [ -n "$$unformatted" ]; then echo "$$unformatted"; echo "run '"'"'make fmt'"'"' to fix"; exit 1; fi'
 
 vet:
 	$(DOCKER_RUN) go vet ./...
